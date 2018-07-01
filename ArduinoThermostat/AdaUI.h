@@ -7,6 +7,13 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ILI9341.h>
 
+/************************************************************************/
+/*                                                                      */
+/*  Settings                                                            */
+/*                                                                      */
+/************************************************************************/
+
+//#define ADAUI_NOBLINK           1
 
 /************************************************************************/
 /*                                                                      */
@@ -54,6 +61,7 @@ enum AdaUIAlignment
 #define ADAUI_YELLOW    0xFD40      // H=40, S=100%, V=100%
 #define ADAUI_PURPLE    0xCCD9      // H=300, S=25%, V=80%
 #define ADAUI_DARKGRAY  0x2925      // H=0, S=0%, V=15%
+#define ADAUI_BLACK     0x0000      // Black
 
 /************************************************************************/
 /*                                                                      */
@@ -133,7 +141,8 @@ class AdaUI: public Adafruit_ILI9341
         int16_t charWidth(uint8_t ch);
         int16_t stringWidth(const char *str);
         int16_t stringWidth(const __FlashStringHelper *str);
-
+    
+#if ADAUI_NOBLINK == 1
         void drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
                         void *str, bool inPgm, int16_t baseline, 
                         AdaUICorner corners, AdaUIAlignment align);
@@ -141,4 +150,5 @@ class AdaUI: public Adafruit_ILI9341
         
         void drawButton(int16_t x, int16_t y, int16_t w, int16_t h, 
                         AdaUICorner corners, int16_t l, int16_t r);
+#endif
 };

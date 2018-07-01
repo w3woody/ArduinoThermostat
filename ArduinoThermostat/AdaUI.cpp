@@ -204,6 +204,8 @@ int16_t AdaUI::stringWidth(const __FlashStringHelper *s)
 /*                                                                      */
 /************************************************************************/
 
+#if ADAUI_NOBLINK == 1
+
 /*
  *  This draws a band of the rounded rectangle from l to r. We assume l and r
  *  are within the range [x,x+w). Assumes startWrite already called. This is
@@ -304,106 +306,6 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
     }
 }
 
-/************************************************************************/
-/*                                                                      */
-/*  Round Rect Drawing                                                  */
-/*                                                                      */
-/************************************************************************/
-
-/*  AdaUI::drawButton
- *
- *      Draw the button without text block.
- */
-
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, AdaUICorner corners)
-{
-    int8_t tmp;
-    int16_t xl,xw;
-
-    /*
-     *  Fast escape if this is just a rectangle
-     */
-
-    if (corners == 0) {
-        fillRect(x,y,w,h,textbgcolor);
-    } else {
-        startWrite();
-        /*
-         *  We're drawing corners. Note this can look wonky if the size
-         *  of our rectangle is too small.
-         */
-        
-        if (corners & (KCornerUL | KCornerUR)) {
-            /*
-             *  Draw the top curves
-             */
-            
-            for (uint8_t i = 0; i < 11; ++i) {
-                tmp = 10 - pgm_read_byte(Curve11 + i);
-                if (corners & KCornerUL) {
-                    xl = x + tmp;
-                    xw = w - tmp;
-                } else {
-                    xl = x;
-                    xw = w;
-                }
-                if (corners & KCornerUR) {
-                    xw -= tmp;
-                }
-                writeFastHLine(xl,i+y,xw,textbgcolor);
-            }
-
-            y += 11;
-            h -= 11;
-        }
-        
-        if (corners & (KCornerLL | KCornerLR)) {
-            /*
-             *  Draw the bottom curves
-             */
-            
-            for (uint8_t i = 0; i < 11; ++i) {
-                tmp = 10 - pgm_read_byte(Curve11 + 10 - i);
-                if (corners & KCornerLL) {
-                    xl = x + tmp;
-                    xw = w - tmp;
-                } else {
-                    xl = x;
-                    xw = w;
-                }
-                if (corners & KCornerLR) {
-                    xw -= tmp;
-                }
-                writeFastHLine(xl,y+h-11+i,xw,textbgcolor);
-            }
-            
-            h -= 11;
-        }
-        
-        /*
-         *  Draw the rectangle in between
-         */
-        
-        if (h > 0) {
-            writeFillRect(x,y,w,h,textbgcolor);
-        }
-
-        endWrite();
-    }
-}
-
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-        const char *str, int16_t baseline, AdaUICorner corners, AdaUIAlignment align)
-{
-    drawButtonInternal(x,y,w,h,(const uint8_t *)str,false,baseline,corners,align);
-}
-
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-        const __FlashStringHelper *str, int16_t baseline, AdaUICorner corners, 
-        AdaUIAlignment align)
-{
-    drawButtonInternal(x,y,w,h,(const uint8_t *)str,true,baseline,corners,align);
-}
 
 /*
  *  Internal drawing routine
@@ -611,5 +513,152 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
         drawButton(x,y,w,h,corners,xpos,x+w);
         endWrite();
     }
+}
+
+#endif
+
+/************************************************************************/
+/*                                                                      */
+/*  Round Rect Drawing                                                  */
+/*                                                                      */
+/************************************************************************/
+
+/*  AdaUI::drawButton
+ *
+ *      Draw the button without text block.
+ */
+
+void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, AdaUICorner corners)
+{
+    int8_t tmp;
+    int16_t xl,xw;
+
+    /*
+     *  Fast escape if this is just a rectangle
+     */
+
+    if (corners == 0) {
+        fillRect(x,y,w,h,textbgcolor);
+    } else {
+        startWrite();
+        /*
+         *  We're drawing corners. Note this can look wonky if the size
+         *  of our rectangle is too small.
+         */
+        
+        if (corners & (KCornerUL | KCornerUR)) {
+            /*
+             *  Draw the top curves
+             */
+            
+            for (uint8_t i = 0; i < 11; ++i) {
+                tmp = 10 - pgm_read_byte(Curve11 + i);
+                if (corners & KCornerUL) {
+                    xl = x + tmp;
+                    xw = w - tmp;
+                } else {
+                    xl = x;
+                    xw = w;
+                }
+                if (corners & KCornerUR) {
+                    xw -= tmp;
+                }
+                writeFastHLine(xl,i+y,xw,textbgcolor);
+            }
+
+            y += 11;
+            h -= 11;
+        }
+        
+        if (corners & (KCornerLL | KCornerLR)) {
+            /*
+             *  Draw the bottom curves
+             */
+            
+            for (uint8_t i = 0; i < 11; ++i) {
+                tmp = 10 - pgm_read_byte(Curve11 + 10 - i);
+                if (corners & KCornerLL) {
+                    xl = x + tmp;
+                    xw = w - tmp;
+                } else {
+                    xl = x;
+                    xw = w;
+                }
+                if (corners & KCornerLR) {
+                    xw -= tmp;
+                }
+                writeFastHLine(xl,y+h-11+i,xw,textbgcolor);
+            }
+            
+            h -= 11;
+        }
+        
+        /*
+         *  Draw the rectangle in between
+         */
+        
+        if (h > 0) {
+            writeFillRect(x,y,w,h,textbgcolor);
+        }
+
+        endWrite();
+    }
+}
+
+void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
+        const char *str, int16_t baseline, AdaUICorner corners, AdaUIAlignment align)
+{
+#if ADAUI_NOBLINK == 1
+    drawButtonInternal(x,y,w,h,(const uint8_t *)str,false,baseline,corners,align);
+#else
+    int16_t xp;
+
+    xp = stringWidth(str);
+    switch (align) {
+        case KLeftAlign:
+            xp = x + 5;
+            break;
+        case KCenterAlign:
+            xp = x+(w-xp)/2;
+            break;
+        default:
+        case KRightAlign:
+            xp = x+w-5-xp;
+            break;
+    }
+    
+    drawButton(x,y,w,h,corners);
+    setCursor(xp,y+baseline);
+    print(str);
+#endif
+}
+
+void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
+        const __FlashStringHelper *str, int16_t baseline, AdaUICorner corners, 
+        AdaUIAlignment align)
+{
+#if ADAUI_NOBLINK == 1
+    drawButtonInternal(x,y,w,h,(const uint8_t *)str,true,baseline,corners,align);
+#else
+    int16_t xp;
+
+    xp = stringWidth(str);
+    switch (align) {
+        case KLeftAlign:
+            xp = x + 5;
+            break;
+        case KCenterAlign:
+            xp = x+(w-xp)/2;
+            break;
+        default:
+        case KRightAlign:
+            xp = x+w-5-xp;
+            break;
+    }
+    
+    drawButton(x,y,w,h,corners);
+    setCursor(xp,y+baseline);
+    print(str);
+#endif
 }
 
