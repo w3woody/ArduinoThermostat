@@ -24,7 +24,6 @@
 #include <Adafruit_FT6206.h>
 #include "AdaUI.h"
 #include "Narrow25.h"
-#include "Narrow50D.h"
 #include "Narrow75D.h"
 
 // For the Adafruit shield, these are the default.
@@ -153,54 +152,34 @@ void drawarc(int16_t x, int16_t y)
     context.endWrite();
 }
 
-void setup() 
+void formatTemperature(char *dest, uint8_t temp)
 {
-    context.begin();
-    context.setRotation(1);
-    context.fillScreen(ADAUI_BLACK);
+    uint8_t pos = 0;
+    uint8_t alt;
+    
+    if (temp == 0) {
+        *dest++ = '0';
+        *dest++ = 0;
+    } else {
+        while (temp > 0) {
+            dest[pos++] = '0' + (temp % 10);
+            temp /= 10;
+        }
+        alt = 0;
+        dest[pos] = 0;
+        --pos;
+        while (alt < pos) {
+            char c = dest[alt];
+            dest[alt] = dest[pos];
+            dest[pos] = c;
+            ++alt;
+            --pos;
+        }
+    }
+}
 
-    /*
-     *  Draw a sample screen using our tools
-     */
-    
-    context.setFont(&Narrow25);
-    context.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    context.drawButton(0,0,80,32,F("\177DONE"),24,0,KLeftAlign);
-    
-    context.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    context.drawButton(240,0,80,32,F("12:52pm"),24);
-    
-    context.setTextColor(ADAUI_BLACK,ADAUI_RED);
-    context.drawTopBar();
-    
-    // Draw side controls
-    context.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
-    context.drawButton(0,51,80,37,F("CONTROLS"),30);
-    context.drawButton(0,89,80,37,F("SCHEDULE"),30);
-    context.drawButton(0,127,80,37,F("SETTINGS"),30);
-    
-    context.setTextColor(ADAUI_BLACK,ADAUI_RED);
-    context.drawButton(0,165,80,75);
-    
-    drawarc(120,70);
-    
-    // Draw temperature adjustment
-    context.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
-    context.drawButton(160,200,40,37,F("+"),28,KCornerUL | KCornerLL,KCenterAlign);
-    context.drawButton(201,200,40,37,F("-"),28,KCornerUR | KCornerLR,KCenterAlign);
-    
-    // Draw the temperature
-    context.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    context.setFont(&Narrow75D);
-    context.drawButton(160,120,80,40,F("78"),30,0,KCenterAlign);
-    
-    context.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
-    context.setFont(&Narrow25);
-    context.drawButton(160,160,80,30,F("WINTER"),26,0,KCenterAlign);
-    
-    // Draw the temperature
-    int16_t temp = 75;
-    
+void drawTemperatureMarker(uint8_t temp, uint16_t color)
+{
     int16_t n = temp;
     if (n < 50) n = 50;
     if (n > 90) n = 90;
@@ -213,6 +192,42 @@ void setup()
     int16_t y1 = 150 + y * 75;
     int16_t x2 = 200 + x * 85;
     int16_t y2 = 150 + y * 85;
+    context.drawLine(x1,y1,x2,y2,color);       // white
+    context.fillCircle(x2,y2,5,color);
+    
+    if (angle > M_PI) {
+        x2 -= 29;
+        y2 += 18;
+    } else if (angle > M_PI/2) {
+        x2 -= 29;
+        y2 -= 3;
+    } else if (angle > 0) {
+        x2 += 7;
+        y2 -= 3;
+    } else {
+        x2 += 7;
+        y2 += 18;
+    }
+    
+    char buffer[8];
+    formatTemperature(buffer,temp);
+    context.drawButton(x2,y2-19,22,24,buffer,19,0,KCenterAlign);
+}
+
+void drawTemperature(uint8_t temp)
+{
+    int16_t n = temp;
+    if (n < 50) n = 50;
+    if (n > 90) n = 90;
+    double angle = ((3*M_PI/2) * (90 - n))/40 - (M_PI/4);
+
+    double x = cos(angle);
+    double y = - sin(angle);
+
+    int16_t x1 = 200 + x * 75;
+    int16_t y1 = 150 + y * 75;
+    int16_t x2 = 200 + x * 65;
+    int16_t y2 = 150 + y * 65;      // inward
     context.drawLine(x1,y1,x2,y2,0xFFFF);       // white
     context.fillCircle(x2,y2,5,0xFFFF);
     
@@ -229,11 +244,80 @@ void setup()
         x2 += 7;
         y2 += 18;
     }
-    context.drawButton(x2,y2-19,22,24,F("75"),19,0,KCenterAlign);
+    
+    // Draw the temperature
+    char buffer[8];
+    formatTemperature(buffer,temp);
+    
+    context.setTextColor(0xFFFF,ADAUI_BLACK);
+    context.setFont(&Narrow75D);
+    context.drawButton(160,120,80,40,buffer,30,0,KCenterAlign);
+}
+
+void setup() 
+{
+    /*
+     *  Start screen
+     */
+    
+    context.begin();
+    context.setRotation(1);
+    context.fillScreen(ADAUI_BLACK);
+    
+    /*
+     *  Start touch
+     */
+    
+    touch.begin(40);
+
+    /*
+     *  Draw a sample screen using our tools
+     */
+    
+    context.setFont(&Narrow25);
+//    context.setTextColor(ADAUI_BLUE,ADAUI_BLACK);
+//    context.drawButton(0,0,80,32,F("\177DONE"),24,0,KLeftAlign);
+    
+    context.setTextColor(ADAUI_RED,ADAUI_BLACK);
+    context.drawButton(240,0,80,32,F("TUE 12:52PM"),24);
+    
+    context.setTextColor(ADAUI_BLACK,ADAUI_RED);
+    context.drawTopBar();
+    
+    // Draw side controls
+    context.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
+    context.drawButton(0,51,80,37,F("FAN"),30);
+    context.drawButton(0,89,80,37,F("PROGRAM"),30);
+
+    context.setTextColor(ADAUI_BLACK,ADAUI_RED);
+    context.drawButton(0,127,80,75);
+
+    context.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
+    context.drawButton(0,203,80,37,F("SETTINGS"),30);
+    
+    // Draw temperature arc
+    drawarc(120,70);
+    
+    // Draw temperature adjustment
+    context.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
+    context.drawButton(160,200,40,37,F("68"),28,KCornerUL | KCornerLL,KCenterAlign);
+    context.drawButton(201,200,40,37,F("78"),28,KCornerUR | KCornerLR,KCenterAlign);
+    
+    context.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
+    context.setFont(&Narrow25);
+    context.drawButton(160,160,80,30,F("WINTER"),26,0,KCenterAlign);
+    
+    // Draw the temperature
+    drawTemperatureMarker(70,0xF800);       // red
+    drawTemperatureMarker(78,0x001F);       // blue
+    drawTemperature(75);
 }
 
 void loop() 
 {
   // put your main code here, to run repeatedly:
-
+    if (!touch.touched()) return;
+    
+    TS_Point p = touch.getPoint();
+    
 }

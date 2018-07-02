@@ -1,5 +1,5 @@
 {
-  "export" : "file:\/\/\/Users\/woody\/Development\/ArduinoUI\/Narrow25.h",
+  "export" : "file:\/\/\/Users\/woody\/Development\/ArduinoThermostat\/ArduinoThermostat\/Narrow25.h",
   "capHeight" : 18,
   "characters" : [
     {
@@ -333,9 +333,9 @@
     {
       "xOffset" : 0,
       "xAdvance" : 5,
-      "bitmap" : "111111111111111111111111111111111111111111111111111111111111111111111111",
+      "bitmap" : "111111111111111111111111111111111111111111111111111111",
       "yOffset" : 18,
-      "width" : 4,
+      "width" : 3,
       "height" : 18
     },
     {
@@ -764,11 +764,11 @@
     },
     {
       "xOffset" : 0,
-      "xAdvance" : 5,
-      "bitmap" : "",
-      "yOffset" : 0,
-      "width" : 0,
-      "height" : 0
+      "xAdvance" : 10,
+      "bitmap" : "     1     111   1111  1111  1111  1111   1111    1111    1111    1111    111     1 ",
+      "yOffset" : 14,
+      "width" : 7,
+      "height" : 12
     },
     {
       "xOffset" : 0,
