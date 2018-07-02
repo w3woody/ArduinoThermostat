@@ -287,7 +287,7 @@ void setup()
     // Draw side controls
     context.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
     context.drawButton(0,51,80,37,F("FAN"),30);
-    context.drawButton(0,89,80,37,F("PROGRAM"),30);
+    context.drawButton(0,89,80,37,F("SCHEDULE"),30);
 
     context.setTextColor(ADAUI_BLACK,ADAUI_RED);
     context.drawButton(0,127,80,75);
