@@ -32,6 +32,9 @@
 #define TFT_CS 10
 AdaUI context(TFT_CS, TFT_DC);
 
+// The FT6206 uses hardware I2C (SCL/SDA)
+Adafruit_FT6206 touch = Adafruit_FT6206();
+
 
 // Bitmap for ring
 const uint8_t Arc_bitmap[] PROGMEM = {
@@ -162,10 +165,10 @@ void setup()
     
     context.setFont(&Narrow25);
     context.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    context.drawButton(0,0,80,32,F("\177DONE"),22,0,KLeftAlign);
+    context.drawButton(0,0,80,32,F("\177DONE"),24,0,KLeftAlign);
     
     context.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    context.drawButton(240,0,80,32,F("12:52pm"),22);
+    context.drawButton(240,0,80,32,F("12:52pm"),24);
     
     context.setTextColor(ADAUI_BLACK,ADAUI_RED);
     context.drawTopBar();
