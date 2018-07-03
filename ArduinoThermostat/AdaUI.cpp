@@ -212,8 +212,7 @@ int16_t AdaUI::stringWidth(const __FlashStringHelper *s)
  *  used for blink-free redrawing of buttons.
  */
 
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, 
-        AdaUICorner corners, int16_t l, int16_t r)
+void AdaUI::drawButton(AdaUIRect rect, AdaUICorner corners, int16_t l, int16_t r)
 {
     int16_t xtmp;
     int16_t rpos;
@@ -227,7 +226,7 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
      */
      
     if (corners & (KCornerUL | KCornerLL)) {
-        xtmp = x + 11;
+        xtmp = rect.x + 11;
         /*
          *  0 to 10 has a curve. 
          */
@@ -241,10 +240,10 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
             if (rpos > xtmp) rpos = xtmp;
             
             for (xpos = l; xpos < rpos; ++xpos) {
-                tmp = 10 - pgm_read_byte(Curve11 + (xpos - x));
+                tmp = 10 - pgm_read_byte(Curve11 + (xpos - rect.x));
                 
-                ypos = y;
-                hlen = h;
+                ypos = rect.y;
+                hlen = rect.h;
                 if (corners & KCornerUL) {
                     ypos += tmp;
                     hlen -= tmp;
@@ -267,12 +266,12 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
     
     rpos = r;
     if (corners & (KCornerUR | KCornerLR)) {
-        xtmp = x + w - 11;
+        xtmp = rect.x + rect.w - 11;
         if (rpos > xtmp) rpos = xtmp;
     }
     
     if (l < rpos) {
-        writeFillRect(l,y,rpos-l,h,textbgcolor);
+        writeFillRect(l,rect.y,rpos-l,rect.h,textbgcolor);
     }
     
     /*
@@ -280,15 +279,15 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
      */
         
     if (corners & (KCornerUR | KCornerLR)) {
-        xtmp = x + w - 11;
+        xtmp = rect.x + rect.w - 11;
         if (r > xtmp) {
             if (l < xtmp) l = xtmp;
             
             for (xpos = l; xpos < r; ++xpos) {
                 tmp = 10 - pgm_read_byte(Curve11 + 10 - (xpos - xtmp));
                 
-                ypos = y;
-                hlen = h;
+                ypos = rect.y;
+                hlen = rect.h;
                 if (corners & KCornerUR) {
                     ypos += tmp;
                     hlen -= tmp;
@@ -311,9 +310,8 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
  *  Internal drawing routine
  */
 
-void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
-        void *s, bool inPgm, int16_t baseline, AdaUICorner corners, 
-        AdaUIAlignment align)
+void AdaUI::drawButtonInternal(AdaUIRect r, void *s, bool inPgm, 
+        int16_t baseline, AdaUICorner corners, AdaUIAlignment align)
 {
     int16_t xstart;
     
@@ -329,14 +327,14 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
     }
     switch (align) {
         case KLeftAlign:
-            xstart = x + 5;
+            xstart = r.x + 5;
             break;
         case KCenterAlign:
-            xstart = x+(w-sw)/2;
+            xstart = r.x+(r.w-sw)/2;
             break;
         default:
         case KRightAlign:
-            xstart = x+w-5-sw;
+            xstart = r.x+r.w-5-sw;
             break;
     }
 
@@ -352,7 +350,7 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
          *  Set cursor for drawing
          */
          
-        setCursor(xstart,y+baseline-textsize * 6);
+        setCursor(xstart,r.y+baseline-textsize * 6);
         
         /*
          *  The default (without a font) can draw the background. So we
@@ -366,10 +364,10 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
         }
         
         startWrite();
-        drawButton(x,y,w,h,corners,x,xpos);
-        drawButton(x,y,w,h,corners,xpos+width,x+w);
-        drawButton(x,y,w,ypos-y,corners & (KCornerUL | KCornerUR),xpos,xpos+width);
-        drawButton(x,ypos+height,w,y+h-ypos-height,corners & (KCornerLL | KCornerLR),xpos,xpos+width);
+        drawButton(r,corners,r.x,xpos);
+        drawButton(r,corners,xpos+width,r.x+r.w);
+        drawButton(RECT(r.x,r.y,r.w,ypos-r.y),corners & (KCornerUL | KCornerUR),xpos,xpos+width);
+        drawButton(RECT(r.x,ypos+height,r.w,r.y+r.h-ypos-height),corners & (KCornerLL | KCornerLR),xpos,xpos+width);
         endWrite();
                 
         // This is a kludge from Adafruit GFX to handle the baseline of the old
@@ -409,7 +407,7 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
          *  we wind up blinking those pixels.
          */
         
-        drawButton(x,y,w,h,corners,x,xstart);
+        drawButton(r,corners,r.x,xstart);
         
         /*
          *  We use xpos to indicate the leftmost portion of our button that
@@ -423,7 +421,7 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
         
         xpos = xstart;
         cursor_x = xpos;
-        cursor_y = y + baseline;
+        cursor_y = r.y + baseline;
         
         /*
          *  Now work our way across, drawing the characters. We rewrite the 
@@ -460,7 +458,7 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
                 
                 int16_t tmpw = cursor_x + gx;
                 if (tmpw > xpos) {
-                    drawButton(x,y,w,h,corners,xpos,tmpw);
+                    drawButton(r,corners,xpos,tmpw);
                     xpos = tmpw;
                 }
                 
@@ -469,9 +467,9 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
                  *  bitmap. We do this in case we get the calcs wrong
                  */
                 
-                drawButton(x,y,w,cursor_y + gy - y,corners & (KCornerUL | KCornerUR),
+                drawButton(RECT(r.x,r.y,r.w,cursor_y + gy - r.y),corners & (KCornerUL | KCornerUR),
                     cursor_x + gx,cursor_x + gx + gw);
-                drawButton(x,cursor_y + gy + gh,w,y+h - cursor_y - gy - gh,
+                drawButton(RECT(r.x,cursor_y + gy + gh,r.w,r.y+r.h - cursor_y - gy - gh),
                     corners & (KCornerLL | KCornerLR),cursor_x + gx,cursor_x + gx + gw);
                 
                 /*
@@ -510,7 +508,7 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
          *  rest
          */
         
-        drawButton(x,y,w,h,corners,xpos,x+w);
+        drawButton(r,corners,xpos,r.x+r.w);
         endWrite();
     }
 }
@@ -528,7 +526,7 @@ void AdaUI::drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
  *      Draw the button without text block.
  */
 
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, AdaUICorner corners)
+void AdaUI::drawButton(AdaUIRect r, AdaUICorner corners)
 {
     int8_t tmp;
     int16_t xl,xw;
@@ -538,7 +536,7 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, AdaUICorner c
      */
 
     if (corners == 0) {
-        fillRect(x,y,w,h,textbgcolor);
+        fillRect(r.x,r.y,r.w,r.h,textbgcolor);
     } else {
         startWrite();
         /*
@@ -554,20 +552,20 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, AdaUICorner c
             for (uint8_t i = 0; i < 11; ++i) {
                 tmp = 10 - pgm_read_byte(Curve11 + i);
                 if (corners & KCornerUL) {
-                    xl = x + tmp;
-                    xw = w - tmp;
+                    xl = r.x + tmp;
+                    xw = r.w - tmp;
                 } else {
-                    xl = x;
-                    xw = w;
+                    xl = r.x;
+                    xw = r.w;
                 }
                 if (corners & KCornerUR) {
                     xw -= tmp;
                 }
-                writeFastHLine(xl,i+y,xw,textbgcolor);
+                writeFastHLine(xl,i+r.y,xw,textbgcolor);
             }
 
-            y += 11;
-            h -= 11;
+            r.y += 11;
+            r.h -= 11;
         }
         
         if (corners & (KCornerLL | KCornerLR)) {
@@ -578,86 +576,85 @@ void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h, AdaUICorner c
             for (uint8_t i = 0; i < 11; ++i) {
                 tmp = 10 - pgm_read_byte(Curve11 + 10 - i);
                 if (corners & KCornerLL) {
-                    xl = x + tmp;
-                    xw = w - tmp;
+                    xl = r.x + tmp;
+                    xw = r.w - tmp;
                 } else {
-                    xl = x;
-                    xw = w;
+                    xl = r.x;
+                    xw = r.w;
                 }
                 if (corners & KCornerLR) {
                     xw -= tmp;
                 }
-                writeFastHLine(xl,y+h-11+i,xw,textbgcolor);
+                writeFastHLine(xl,r.y+r.h-11+i,xw,textbgcolor);
             }
             
-            h -= 11;
+            r.h -= 11;
         }
         
         /*
          *  Draw the rectangle in between
          */
         
-        if (h > 0) {
-            writeFillRect(x,y,w,h,textbgcolor);
+        if (r.h > 0) {
+            writeFillRect(r.x,r.y,r.w,r.h,textbgcolor);
         }
 
         endWrite();
     }
 }
 
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-        const char *str, int16_t baseline, AdaUICorner corners, AdaUIAlignment align)
+void AdaUI::drawButton(AdaUIRect r, const char *str, int16_t baseline, 
+        AdaUICorner corners, AdaUIAlignment align)
 {
 #if ADAUI_NOBLINK == 1
-    drawButtonInternal(x,y,w,h,(const uint8_t *)str,false,baseline,corners,align);
+    drawButtonInternal(r,(const uint8_t *)str,false,baseline,corners,align);
 #else
     int16_t xp;
 
     xp = stringWidth(str);
     switch (align) {
         case KLeftAlign:
-            xp = x + 5;
+            xp = r.x + 5;
             break;
         case KCenterAlign:
-            xp = x+(w-xp)/2;
+            xp = r.x+(r.w-xp)/2;
             break;
         default:
         case KRightAlign:
-            xp = x+w-5-xp;
+            xp = r.x+r.w-5-xp;
             break;
     }
     
-    drawButton(x,y,w,h,corners);
-    setCursor(xp,y+baseline);
+    drawButton(r,corners);
+    setCursor(xp,r.y+baseline);
     print(str);
 #endif
 }
 
-void AdaUI::drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-        const __FlashStringHelper *str, int16_t baseline, AdaUICorner corners, 
-        AdaUIAlignment align)
+void AdaUI::drawButton(AdaUIRect r, const __FlashStringHelper *str, 
+        int16_t baseline, AdaUICorner corners, AdaUIAlignment align)
 {
 #if ADAUI_NOBLINK == 1
-    drawButtonInternal(x,y,w,h,(const uint8_t *)str,true,baseline,corners,align);
+    drawButtonInternal(r,(const uint8_t *)str,true,baseline,corners,align);
 #else
     int16_t xp;
 
     xp = stringWidth(str);
     switch (align) {
         case KLeftAlign:
-            xp = x + 5;
+            xp = r.x + 5;
             break;
         case KCenterAlign:
-            xp = x+(w-xp)/2;
+            xp = r.x+(r.w-xp)/2;
             break;
         default:
         case KRightAlign:
-            xp = x+w-5-xp;
+            xp = r.x+r.w-5-xp;
             break;
     }
     
-    drawButton(x,y,w,h,corners);
-    setCursor(xp,y+baseline);
+    drawButton(r,corners);
+    setCursor(xp,r.y+baseline);
     print(str);
 #endif
 }

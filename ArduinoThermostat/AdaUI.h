@@ -3,6 +3,9 @@
  *      Extends the Adafruit GFX library to provide our basic UI elements
  *  and flicker-free redrawing of text.
  */
+ 
+#ifndef _AdaUI_h
+#define _AdaUI_h
 
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ILI9341.h>
@@ -13,7 +16,7 @@
 /*                                                                      */
 /************************************************************************/
 
-//#define ADAUI_NOBLINK           1
+#define ADAUI_NOBLINK           1
 
 /************************************************************************/
 /*                                                                      */
@@ -62,6 +65,22 @@ enum AdaUIAlignment
 #define ADAUI_PURPLE    0xCCD9      // H=300, S=25%, V=80%
 #define ADAUI_DARKGRAY  0x2925      // H=0, S=0%, V=15%
 #define ADAUI_BLACK     0x0000      // Black
+
+/************************************************************************/
+/*                                                                      */
+/*  Structures                                                          */
+/*                                                                      */
+/************************************************************************/
+
+struct AdaUIRect
+{
+    int16_t x;
+    int16_t y;
+    uint8_t w;
+    uint8_t h;
+};
+
+#define RECT(x,y,w,h) ((AdaUIRect){ x, y, w, h })
 
 /************************************************************************/
 /*                                                                      */
@@ -124,16 +143,13 @@ class AdaUI: public Adafruit_ILI9341
          *  rounded corners. The radius is fixed.
          */
         
-        void drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-                        AdaUICorner corners = 0);
+        void drawButton(AdaUIRect r, AdaUICorner corners = 0);
                         
-        void drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-                        const __FlashStringHelper *str, int16_t baseline, 
-                        AdaUICorner corners = 0,
+        void drawButton(AdaUIRect r, const __FlashStringHelper *str, 
+                        int16_t baseline, AdaUICorner corners = 0,
                         AdaUIAlignment align = KRightAlign);
                        
-        void drawButton(int16_t x, int16_t y, int16_t w, int16_t h,
-                        const char *str, int16_t baseline, 
+        void drawButton(AdaUIRect r, const char *str, int16_t baseline, 
                         AdaUICorner corners = 0,
                         AdaUIAlignment align = KRightAlign);
                         
@@ -143,12 +159,13 @@ class AdaUI: public Adafruit_ILI9341
         int16_t stringWidth(const __FlashStringHelper *str);
     
 #if ADAUI_NOBLINK == 1
-        void drawButtonInternal(int16_t x, int16_t y, int16_t w, int16_t h,
-                        void *str, bool inPgm, int16_t baseline, 
-                        AdaUICorner corners, AdaUIAlignment align);
+        void drawButtonInternal(AdaUIRect r, void *str, bool inPgm, 
+                        int16_t baseline, AdaUICorner corners, 
+                        AdaUIAlignment align);
                         
         
-        void drawButton(int16_t x, int16_t y, int16_t w, int16_t h, 
-                        AdaUICorner corners, int16_t l, int16_t r);
+        void drawButton(AdaUIRect rect, AdaUICorner corners, int16_t l, int16_t r);
 #endif
 };
+
+#endif
