@@ -64,6 +64,26 @@ AdaUIPage *AdaUIPage::top;
 
 /************************************************************************/
 /*                                                                      */
+/*  Support                                                             */
+/*                                                                      */
+/************************************************************************/
+
+/*  PtInRect
+ *
+ *      Is point in rect?
+ */
+
+static bool PtInRect(TS_Point pt, AdaUIRect r)
+{
+    if (pt.x < r.x) return false;
+    if (pt.y < r.y) return false;
+    if (pt.x > r.x + r.w) return false;
+    if (pt.y > r.y + r.w) return false;
+    return true;
+}
+
+/************************************************************************/
+/*                                                                      */
 /*  Program Memory Support                                              */
 /*                                                                      */
 /************************************************************************/
@@ -92,9 +112,6 @@ AdaUIPage::AdaUIPage(const AdaPage *p)
 
 void AdaUIPage::pushPage(AdaUIPage *page)
 {
-    if (top) top->pageWillHide();
-    page->pageWillShow();
-    
     page->next = top;
     top = page;
     
@@ -104,11 +121,83 @@ void AdaUIPage::pushPage(AdaUIPage *page)
 void AdaUIPage::popPage()
 {
     if (next) {
-        pageWillHide();
-        next->pageWillShow();
-    
         top = next;
         top->invalidFlags = 0xFF; // Force redraw of top page.
+    }
+}
+
+/*  processPageEvents
+ *
+ *      Process events on my page
+ */
+
+void AdaUIPage::processPageEvents()
+{
+    const char *tmp;
+    
+    /*
+     *  Redraw if necessary
+     */
+    
+    if (invalidFlags) {
+        draw();
+        invalidFlags = 0;
+    }
+    
+    /*
+     *  Finally process events
+     */
+     
+    periodicEvents();
+    
+    /*
+     *  Now test touch events
+     */
+
+    if (Touch.touched()) {
+        TS_Point p = Touch.getPoint();
+        
+        /*
+         *  Back
+         */
+        
+        tmp = (const char *)pgm_read_pointer(&page->back);
+        if (tmp && PtInRect(p,RECT(0,0,80,40))) {
+            popPage();
+            return;
+        }
+        
+        /*
+         *  Right buttons
+         */
+        
+        const char **leftArray = (const char **)pgm_read_pointer(&page->list);
+        for (uint8_t i = 0; i < NUMBUTTONS; ++i) {
+            tmp = (const char *)pgm_read_pointer(leftArray+i);
+            if (tmp && PtInRect(p,RECT(0,(TOPBARBOTTOM+1)+LEFTBUTTONHEIGHT*i,
+                                   80,LEFTBUTTONHEIGHT-1))) {
+                handleEvent(i);
+                return;
+            }
+        }
+        
+        /*
+         *  Other buttons
+         */
+        
+        AdaUIRect *llist = pgm_read_pointer(&page->hitSpots);
+        uint8_t len = (uint8_t)pgm_read_pointer(&page->hitCount);
+        for (uint8_t i = 0; i < len; ++i) {
+            AdaUIRect r;
+            r.x = pgm_read_word(&(llist[i].x));
+            r.y = pgm_read_word(&(llist[i].y));
+            r.w = pgm_read_byte(&(llist[i].w));
+            r.h = pgm_read_byte(&(llist[i].h));
+            if (PtInRect(p,r)) {
+                handleEvent(i+AEVENT_FIRSTSPOT);
+                return;
+            }
+        }
     }
 }
 
@@ -120,30 +209,7 @@ void AdaUIPage::popPage()
 void AdaUIPage::processEvents()
 {
     if (top == NULL) return;        // ???
-    
-    /*
-     *  Redraw if necessary
-     */
-    
-    if (top->invalidFlags) {
-        top->draw();
-        top->invalidFlags = 0;
-    }
-    
-    /*
-     *  Now test touch events
-     */
-
-    if (Touch.touched()) {
-        TS_Point p = Touch.getPoint();
-        // Hit detection TODO
-    }
-    
-    /*
-     *  Finally process events
-     */
-     
-    top->periodicEvents();
+    top->processPageEvents();
 }
 
 /************************************************************************/
@@ -263,30 +329,12 @@ void AdaUIPage::drawContents()
 {
 }
 
-/*  AdaUIPage::pageWillShow
- *
- *      Default does nothing
- */
-
-void AdaUIPage::pageWillShow()
-{
-}
-
-/*  AdaUIPage::pageWillHide
- *
- *      Default does nothing
- */
-
-void AdaUIPage::pageWillHide()
-{
-}
-
 /*  AdaUIPage::handleEvent
  *
  *      Default does nothing
  */
 
-void AdaUIPage::handleEvent(int8_t ix)
+void AdaUIPage::handleEvent(uint8_t ix)
 {
 }
 

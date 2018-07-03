@@ -30,12 +30,11 @@
 /*                                                                      */
 /************************************************************************/
 
-#define AEVENT_BACK             0
-#define AEVENT_LEFTBUTTON1      1
-#define AEVENT_LEFTBUTTON2      2
-#define AEVENT_LEFTBUTTON3      3
-#define AEVENT_LEFTBUTTON4      4
-#define AEVENT_LEFTBUTTON5      5
+#define AEVENT_LEFTBUTTON1      0
+#define AEVENT_LEFTBUTTON2      1
+#define AEVENT_LEFTBUTTON3      2
+#define AEVENT_LEFTBUTTON4      3
+#define AEVENT_LEFTBUTTON5      4
 
 #define AEVENT_FIRSTSPOT        16      /* First hit spot in hit spots array */
 
@@ -97,14 +96,14 @@ class AdaUIPage
                                 invalidFlags |= INVALIDATE_DRAW;
                             }
 
-        virtual void    pageWillShow();     // Make page visible
-        virtual void    pageWillHide();     // page will hide
-        virtual void    handleEvent(int8_t ix); // Hit Index
+        virtual void    handleEvent(uint8_t ix); // Hit Index
         virtual void    periodicEvents();   // Called periodically to run events
         virtual void    drawTitle();        // Override if custom title        
         virtual void    drawContents();     // Override for custom contents
         
     protected:
+        void            processPageEvents();
+        
         /*
          *  Linked list of visible pages.
          */
