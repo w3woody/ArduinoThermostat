@@ -183,7 +183,7 @@ void DrawArc(uint8_t lastState, int16_t x, int16_t y)
     GC.endWrite();
 }
 
-void drawTemperatureMarker(uint8_t temp, uint16_t color)
+void DrawMarker(uint8_t temp, uint16_t color, bool outside)
 {
     int16_t n = temp;
     if (n < 50) n = 50;
@@ -193,10 +193,19 @@ void drawTemperatureMarker(uint8_t temp, uint16_t color)
     double x = cos(angle);
     double y = - sin(angle);
 
-    int16_t x1 = 200 + x * 75;
-    int16_t y1 = 150 + y * 75;
-    int16_t x2 = 200 + x * 85;
-    int16_t y2 = 150 + y * 85;
+    int16_t x1,y1,x2,y2;
+    if (outside) {
+        x1 = 200 + x * 75;
+        y1 = 150 + y * 75;
+        x2 = 200 + x * 85;
+        y2 = 150 + y * 85;
+    } else {
+        x1 = 200 + x * 75;
+        y1 = 150 + y * 75;
+        x2 = 200 + x * 65;
+        y2 = 150 + y * 65;
+    }
+
     GC.drawLine(x1,y1,x2,y2,color);       // white
     GC.fillCircle(x2,y2,5,color);
     
@@ -214,42 +223,20 @@ void drawTemperatureMarker(uint8_t temp, uint16_t color)
         y2 += 18;
     }
     
-    char buffer[8];
-    FormatNumber(buffer,temp);
-    GC.drawButton(RECT(x2,y2-19,22,24),buffer,19,0,KCenterAlign);
+    if (outside) {
+        char buffer[8];
+        FormatNumber(buffer,temp);
+        GC.drawButton(RECT(x2,y2-19,22,24),buffer,19,0,KCenterAlign);
+    }
+}
+
+void drawTemperatureMarker(uint8_t temp, uint16_t color)
+{
+    DrawMarker(temp,color,true);
 }
 
 void drawTemperature(uint8_t temp)
 {
-    int16_t n = temp;
-    if (n < 50) n = 50;
-    if (n > 90) n = 90;
-    double angle = ((3*M_PI/2) * (90 - n))/40 - (M_PI/4);
-
-    double x = cos(angle);
-    double y = - sin(angle);
-
-    int16_t x1 = 200 + x * 75;
-    int16_t y1 = 150 + y * 75;
-    int16_t x2 = 200 + x * 65;
-    int16_t y2 = 150 + y * 65;      // inward
-    GC.drawLine(x1,y1,x2,y2,0xFFFF);       // white
-    GC.fillCircle(x2,y2,5,0xFFFF);
-    
-    if (angle > M_PI) {
-        x2 -= 29;
-        y2 += 18;
-    } else if (angle > M_PI/2) {
-        x2 -= 29;
-        y2 -= 3;
-    } else if (angle > 0) {
-        x2 += 7;
-        y2 -= 3;
-    } else {
-        x2 += 7;
-        y2 += 18;
-    }
-    
     // Draw the temperature
     char buffer[8];
     FormatNumber(buffer,temp);
@@ -257,6 +244,9 @@ void drawTemperature(uint8_t temp)
     GC.setTextColor(0xFFFF,ADAUI_BLACK);
     GC.setFont(&Narrow75D);
     GC.drawButton(RECT(160,100,80,65),buffer,56,0,KCenterAlign);
+
+    // Draw the marker
+    DrawMarker(temp,0xFFFF,false);    
 }
 
 /************************************************************************/
