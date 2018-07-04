@@ -23,6 +23,7 @@
 /************************************************************************/
 
 #define INVALIDATE_DRAW         0x01
+#define INVALIDATE_CONTENT      0x02
 
 /************************************************************************/
 /*                                                                      */
@@ -95,6 +96,10 @@ class AdaUIPage
                             {
                                 invalidFlags |= INVALIDATE_DRAW;
                             }
+        void            invalidateContents()
+                            {
+                                invalidFlags |= INVALIDATE_CONTENT;
+                            }
 
         virtual void    handleEvent(uint8_t ix); // Hit Index
         virtual void    periodicEvents();   // Called periodically to run events
@@ -116,6 +121,7 @@ class AdaUIPage
          *  Page contents
          */
         
+        bool            wideScreen;         // content area wide
         uint8_t         invalidFlags;       // Invalid flag regions
         const AdaPage   *page;              // Must be in program memory
         

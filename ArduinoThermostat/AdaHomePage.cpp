@@ -380,7 +380,6 @@ void AdaHomePage::periodicEvents()
         lastTemp = GThermostat.curTemperature;
         lastState = GThermostat.unitState;
         
-        GC.fillRect(95,40,225,200,0x0000);      // Fill with black
-        drawContents();                         // Draw just the contents
+        invalidateContents();
     }
 }

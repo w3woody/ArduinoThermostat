@@ -136,19 +136,29 @@ void AdaUIPage::processPageEvents()
     const char *tmp;
     
     /*
+     *  Process events
+     */
+     
+    periodicEvents();
+    
+    /*
      *  Redraw if necessary
      */
     
     if (invalidFlags) {
-        draw();
+        if (invalidFlags & INVALIDATE_DRAW) {
+            draw();
+        } else if (invalidFlags & INVALIDATE_CONTENT) {
+            // Erase content area
+            if (wideScreen) {
+                GC.fillRect(0,40,320,200,0x0000);       // Fill with black
+            } else {
+                GC.fillRect(95,40,225,200,0x0000);      // Fill with black
+            }
+            drawContents();
+        }
         invalidFlags = 0;
     }
-    
-    /*
-     *  Finally process events
-     */
-     
-    periodicEvents();
     
     /*
      *  Now test touch events. Note we use 'lastDown' to determine if we've
@@ -288,8 +298,12 @@ void AdaUIPage::draw()
 
     const char **leftArray = (const char **)pgm_read_pointer(&page->list);
     if (leftArray == NULL) {
+        wideScreen = true;
+        
         GC.fillRect(0,32,320,7,ADAUI_RED);  // Top bar w/o left
     } else {
+        wideScreen = false;
+        
         GC.drawTopBar();
         
         /*
