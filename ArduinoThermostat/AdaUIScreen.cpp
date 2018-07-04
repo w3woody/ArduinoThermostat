@@ -30,6 +30,7 @@ Adafruit_FT6206 Touch;
 void AInitScreen(void)
 {
     GC.begin();
+
     GC.setRotation(1);
     GC.fillScreen(ADAUI_BLACK);
     

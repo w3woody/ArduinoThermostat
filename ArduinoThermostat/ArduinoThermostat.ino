@@ -34,6 +34,8 @@
 #include "AdaUIScreen.h"
 #include "AdaUIPage.h"
 #include "AdaHomePage.h"
+#include "AdaTime.h"
+#include "AdaThermostat.h"
 
 
 // const char string_fan[] PROGMEM = "FAN";
@@ -59,11 +61,16 @@ void setup()
      */
     
     AInitScreen();
+    AdaTimeInitialize();        /* Start clock */
 
     AdaUIPage::pushPage(&AHomePage);
 }
 
 void loop() 
 {
+    // Process thermostat state
+    GThermostat.periodicUpdate();
+    
+    // Process periodic UI events
     AdaUIPage::processEvents();
 }

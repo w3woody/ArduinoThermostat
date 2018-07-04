@@ -78,7 +78,7 @@ static bool PtInRect(TS_Point pt, AdaUIRect r)
     if (pt.x < r.x) return false;
     if (pt.y < r.y) return false;
     if (pt.x > r.x + r.w) return false;
-    if (pt.y > r.y + r.w) return false;
+    if (pt.y > r.y + r.h) return false;
     return true;
 }
 
@@ -151,53 +151,76 @@ void AdaUIPage::processPageEvents()
     periodicEvents();
     
     /*
-     *  Now test touch events
+     *  Now test touch events. Note we use 'lastDown' to determine if we've
+     *  detected a tap already. If we have detected one, then we skip
+     *  processing.
      */
 
     if (Touch.touched()) {
-        TS_Point p = Touch.getPoint();
+        if (!lastDown) {
+            lastDown = true;
+
+            TS_Point p = Touch.getPoint();
         
-        /*
-         *  Back
-         */
+            /*
+             *  The touch coordinate is not rotated, even though we rotate our
+             *  screen. So adjust the coordinates
+             */
         
-        tmp = (const char *)pgm_read_pointer(&page->back);
-        if (tmp && PtInRect(p,RECT(0,0,80,40))) {
-            popPage();
-            return;
-        }
+            int16_t tmp = p.x;
+            p.x = 319 - p.y;
+            p.y = tmp;
+                
+            /*
+             *  Back
+             */
         
-        /*
-         *  Right buttons
-         */
-        
-        const char **leftArray = (const char **)pgm_read_pointer(&page->list);
-        for (uint8_t i = 0; i < NUMBUTTONS; ++i) {
-            tmp = (const char *)pgm_read_pointer(leftArray+i);
-            if (tmp && PtInRect(p,RECT(0,(TOPBARBOTTOM+1)+LEFTBUTTONHEIGHT*i,
-                                   80,LEFTBUTTONHEIGHT-1))) {
-                handleEvent(i);
+            tmp = (const char *)pgm_read_pointer(&page->back);
+            if (tmp && PtInRect(p,RECT(0,0,80,40))) {
+                popPage();
                 return;
             }
-        }
         
-        /*
-         *  Other buttons
-         */
+            /*
+             *  Left buttons
+             */
+
+            const char **leftArray = (const char **)pgm_read_pointer(&page->list);
+            if (leftArray != NULL) {
+                for (uint8_t i = 0; i < NUMBUTTONS; ++i) {
+                    tmp = (const char *)pgm_read_pointer(leftArray+i);
+                    if (tmp && PtInRect(p,RECT(0,(TOPBARBOTTOM+1)+LEFTBUTTONHEIGHT*i,
+                                           80,LEFTBUTTONHEIGHT-1))) {
+                        handleEvent(i);
+                        return;
+                    }
+                }
+            }
         
-        AdaUIRect *llist = pgm_read_pointer(&page->hitSpots);
-        uint8_t len = (uint8_t)pgm_read_pointer(&page->hitCount);
-        for (uint8_t i = 0; i < len; ++i) {
-            AdaUIRect r;
-            r.x = pgm_read_word(&(llist[i].x));
-            r.y = pgm_read_word(&(llist[i].y));
-            r.w = pgm_read_byte(&(llist[i].w));
-            r.h = pgm_read_byte(&(llist[i].h));
-            if (PtInRect(p,r)) {
-                handleEvent(i+AEVENT_FIRSTSPOT);
-                return;
+            /*
+             *  Other buttons
+             */
+        
+            AdaUIRect *llist = pgm_read_pointer(&page->hitSpots);
+            uint8_t len = (uint8_t)pgm_read_pointer(&page->hitCount);
+            for (uint8_t i = 0; i < len; ++i) {
+                AdaUIRect r;
+                r.x = pgm_read_word(&(llist[i].x));
+                r.y = pgm_read_word(&(llist[i].y));
+                r.w = pgm_read_byte(&(llist[i].w));
+                r.h = pgm_read_byte(&(llist[i].h));
+                if (PtInRect(p,r)) {
+                    handleEvent(i+AEVENT_FIRSTSPOT);
+                    return;
+                }
             }
         }
+    } else {
+        /*
+         *  Tap is up.
+         */
+        
+        lastDown = false;
     }
 }
 
@@ -265,7 +288,7 @@ void AdaUIPage::draw()
 
     const char **leftArray = (const char **)pgm_read_pointer(&page->list);
     if (leftArray == NULL) {
-        GC.fillRect(0,TOPBARBOTTOM,320,7,ADAUI_RED);
+        GC.fillRect(0,32,320,7,ADAUI_RED);  // Top bar w/o left
     } else {
         GC.drawTopBar();
         

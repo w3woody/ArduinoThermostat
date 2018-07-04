@@ -7,6 +7,13 @@
 #include "AdaHomePage.h"
 #include "Narrow25.h"
 #include "Narrow75D.h"
+#include "AdaTime.h"
+#include "AdaThermostat.h"
+#include "AdaSettingsPage.h"
+#include "AdaUtils.h"
+
+#include "AdaTempPage.h"
+#include "AdaSchedulePage.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -31,6 +38,15 @@ static const AdaPage AHome PROGMEM = {
     NULL, NULL, AHomeTitles, AHomeRects, 2
 };
 
+/************************************************************************/
+/*                                                                      */
+/*  Page Globals                                                        */
+/*                                                                      */
+/************************************************************************/
+
+static AdaTempPage GTempPage;
+static AdaSchedulePage GSchedulePage;
+static AdaSettingsPage GSettingsPage;
 
 /************************************************************************/
 /*                                                                      */
@@ -132,53 +148,39 @@ const uint8_t Arc_bitmap[] PROGMEM = {
     0x82,0x6F,0x82,0x00
 };
 
-void drawarc(int16_t x, int16_t y)
+void DrawArc(uint8_t lastState, int16_t x, int16_t y)
 {
     int xc = x;
     int yc = y;
     const uint8_t *p = Arc_bitmap;
     uint8_t c;
     
-    GC.startWrite();
+    // Arc color gives state of HVAC
+    uint16_t color;
+    if (lastState & ADAHVAC_HEAT) {
+        color = 0xF800;
+    } else if (lastState & ADAHVAC_COOL) {
+        color = 0x001F;
+    } else if (lastState & ADAHVAC_FAN) {
+        color = ADAUI_YELLOW;
+    } else {
+        color = ADAUI_GREEN;
+    }
     
+    GC.startWrite();
+
     while (0 != (c = pgm_read_byte(p++))) {
         if (c == 0x80) {
             yc++;
             xc = x;
         } else if (c & 0x80) {
             // Horizontal band
-            GC.writeFastHLine(xc,yc,0x7F & c,ADAUI_YELLOW);
+            GC.writeFastHLine(xc,yc,0x7F & c,color);
         }
         xc += c & 0x7F;
     }
     
     GC.endWrite();
-}
-
-void formatTemperature(char *dest, uint8_t temp)
-{
-    uint8_t pos = 0;
-    uint8_t alt;
-    
-    if (temp == 0) {
-        *dest++ = '0';
-        *dest++ = 0;
-    } else {
-        while (temp > 0) {
-            dest[pos++] = '0' + (temp % 10);
-            temp /= 10;
-        }
-        alt = 0;
-        dest[pos] = 0;
-        --pos;
-        while (alt < pos) {
-            char c = dest[alt];
-            dest[alt] = dest[pos];
-            dest[pos] = c;
-            ++alt;
-            --pos;
-        }
-    }
 }
 
 void drawTemperatureMarker(uint8_t temp, uint16_t color)
@@ -213,7 +215,7 @@ void drawTemperatureMarker(uint8_t temp, uint16_t color)
     }
     
     char buffer[8];
-    formatTemperature(buffer,temp);
+    FormatNumber(buffer,temp);
     GC.drawButton(RECT(x2,y2-19,22,24),buffer,19,0,KCenterAlign);
 }
 
@@ -250,7 +252,7 @@ void drawTemperature(uint8_t temp)
     
     // Draw the temperature
     char buffer[8];
-    formatTemperature(buffer,temp);
+    FormatNumber(buffer,temp);
     
     GC.setTextColor(0xFFFF,ADAUI_BLACK);
     GC.setFont(&Narrow75D);
@@ -280,12 +282,18 @@ AdaHomePage::AdaHomePage() : AdaUIPage(&AHome)
 
 /*  AdaHomePage::drawTitle
  *
- *      Draw the current title. This draws the time.
+ *      Draw the current title. This draws the time in the upper right
+ *  corner of our display.
  */
 
 void AdaHomePage::drawTitle()
 {
-    GC.drawButton(RECT(160,0,160,32),F("TUE 12:34PM"),24);
+    char buffer[16];
+
+    FormatDayTime(buffer,AdaGetTime());
+    GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
+    GC.setFont(&Narrow25);
+    GC.drawButton(RECT(160,0,160,32),buffer,24);
 }
 
 /*  AdaHomePage::drawContents
@@ -295,13 +303,18 @@ void AdaHomePage::drawTitle()
 
 void AdaHomePage::drawContents()
 {
+    char buffer[8];
+    
     // Draw temperature arc
-    drawarc(120,70);
+    DrawArc(GThermostat.unitState,120,70);
 
     // Draw temperature adjustment
+    GC.setFont(&Narrow25);
     GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
-    GC.drawButton(RECT(160,200,40,37),F("68"),28,KCornerUL | KCornerLL,KCenterAlign);
-    GC.drawButton(RECT(201,200,40,37),F("78"),28,KCornerUR | KCornerLR,KCenterAlign);
+    FormatNumber(buffer,GThermostat.heatSetting);
+    GC.drawButton(RECT(160,200,40,37),buffer,28,KCornerUL | KCornerLL,KCenterAlign);
+    FormatNumber(buffer,GThermostat.coolSetting);
+    GC.drawButton(RECT(201,200,40,37),buffer,28,KCornerUR | KCornerLR,KCenterAlign);
     
     // Draw type of display
     GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
@@ -309,9 +322,12 @@ void AdaHomePage::drawContents()
     GC.drawButton(RECT(160,160,80,30),F("WINTER"),26,0,KCenterAlign);
     
     // Draw the temperature
-    drawTemperatureMarker(70,0xF800);       // red
-    drawTemperatureMarker(78,0x001F);       // blue
-    drawTemperature(75);
+    drawTemperature(GThermostat.curTemperature);
+
+    GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
+    GC.setFont(&Narrow25);
+    drawTemperatureMarker(lastHeat,0xF800);       // red
+    drawTemperatureMarker(lastCool,0x001F);       // blue
 }
 
 /*  AdaHomePage::handleEvent
@@ -322,8 +338,49 @@ void AdaHomePage::drawContents()
 
 void AdaHomePage::handleEvent(uint8_t ix)
 {
+    switch (ix) {
+        case AEVENT_LEFTBUTTON1:
+        case AEVENT_FIRSTSPOT:
+        case AEVENT_FIRSTSPOT+1:
+            pushPage(&GTempPage);
+            break;
+        case AEVENT_LEFTBUTTON2:
+            pushPage(&GSchedulePage);
+            break;
+        case AEVENT_LEFTBUTTON5:
+            pushPage(&GSettingsPage);
+            break;
+    }
 }
 
 void AdaHomePage::periodicEvents()
 {
+    /*
+     *  Check and redraw the time. Note we throttle to only redraw every
+     *  minute rather than once a second.
+     */
+    
+    uint8_t t = AdaGetTime() / 60;
+    if (drewTime != t) {
+        drewTime = t;
+        drawTitle();
+    }
+
+    /*
+     *  Determine the last state we draw. If it has changed, ask for a
+     *  redraw. We just redraw the whole display, and yes I know this
+     *  causes our world to flicker, but I assume this is a rare event.
+     */
+    
+    if ((GThermostat.heatSetting != lastHeat) || (GThermostat.coolSetting != lastCool) ||
+        (GThermostat.curTemperature != lastTemp) || (GThermostat.unitState != lastState)) {
+        
+        lastHeat = GThermostat.heatSetting;
+        lastCool = GThermostat.coolSetting;
+        lastTemp = GThermostat.curTemperature;
+        lastState = GThermostat.unitState;
+        
+        GC.fillRect(95,40,225,200,0x0000);      // Fill with black
+        drawContents();                         // Draw just the contents
+    }
 }

@@ -118,6 +118,12 @@ class AdaUIPage
         
         uint8_t         invalidFlags;       // Invalid flag regions
         const AdaPage   *page;              // Must be in program memory
+        
+        /*
+         *  Tap
+         */
+        
+        bool            lastDown;
 };
 
 #endif
