@@ -1,10 +1,10 @@
-/*  AdaSchedulePage.h
+/*  AdaSchedulePickerPage.h
  *
  *      Allows the users to set the temperature of our thermostat.
  */
 
-#ifndef _AdaSchedulePage_h
-#define _AdaSchedulePage_h
+#ifndef _AdaSchedulePickerPage_h
+#define _AdaSchedulePickerPage_h
 
 #include "AdaUIPage.h"
 
@@ -14,23 +14,21 @@
 /*                                                                      */
 /************************************************************************/
 
-/*  AdaSchedulePage
+/*  AdaSchedulePickerPage
  *
  *      Draws our thermostat and controls the basic settings.
  */
 
-class AdaSchedulePage: public AdaUIPage
+class AdaSchedulePickerPage: public AdaUIPage
 {
     public:
-                        AdaSchedulePage();
+                        AdaSchedulePickerPage();
                         
         virtual void    drawContents();
-        virtual void    drawTitle();        // Override if custom title        
         virtual void    handleEvent(uint8_t ix);
-        virtual void    handleTap(TS_Point pt); // Allow other tap handling
+        
     private:
-        uint8_t         selDOW;
-        uint8_t         selSchedule;
+        void            redrawSelected();
 };
 
 

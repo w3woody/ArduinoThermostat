@@ -36,6 +36,7 @@
 #include "AdaHomePage.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
+#include "AdaSchedule.h"
 
 
 // const char string_fan[] PROGMEM = "FAN";
@@ -68,6 +69,9 @@ void setup()
 
 void loop() 
 {
+    // Process schedule update
+    GSchedule.periodicUpdate();
+
     // Process thermostat state
     GThermostat.periodicUpdate();
     

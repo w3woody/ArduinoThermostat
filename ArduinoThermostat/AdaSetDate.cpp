@@ -11,6 +11,12 @@
 #include "AdaThermostat.h"
 #include "AdaUtils.h"
 
+#ifdef __AVR__
+    #include <avr/pgmspace.h>
+#elif defined(ESP8266) || defined(ESP32)
+    #include <pgmspace.h>
+#endif
+
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
@@ -33,6 +39,23 @@ static const AdaUIRect ADateRects[] PROGMEM = {
 static const AdaPage ADate PROGMEM = {
     string_title, string_back, NULL, ADateRects, 4
 };
+
+/************************************************************************/
+/*                                                                      */
+/*  Support                                                             */
+/*                                                                      */
+/************************************************************************/
+
+/*
+ *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
+ *  space if we are missing some definitions
+ */
+
+#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
+    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
+#else
+    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
+#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -96,6 +119,19 @@ void AdaSetDatePage::drawCalendar()
         ++nyear;
     }
 
+    // erase content area    
+    GC.fillRect(100,50,220,190,ADAUI_BLACK);
+
+    // Draw DOW header in tiny font
+    GC.setFont(NULL);
+    for (uint8_t dow = 0; dow < 7; ++dow) {
+        GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
+        GC.setCursor(107+dow*31,50);
+        GC.print((const __FlashStringHelper *)(GStringDOW + dow*4));
+    }
+
+    // Draw calendar
+    
     GC.setFont(&Narrow25);
     
     uint32_t start = AdaGregorianDayCount(1,month,year);
@@ -105,9 +141,7 @@ void AdaSetDatePage::drawCalendar()
     mdays = end - start;        // # days in the month
     mweeks = (mdays + mdow + 6)/7;   // # visible weeks
     
-    mheight = (mweeks <= 5) ? 38 : 31;    // Some months are short.
-    
-    GC.fillRect(100,50,220,190,ADAUI_BLACK);
+    mheight = (mweeks <= 5) ? 36 : 30;    // Some months are short.
     
     for (uint8_t i = 0; i < mdays; ++i) {
         FormatNumber(buffer,i+1);
@@ -119,7 +153,7 @@ void AdaSetDatePage::drawCalendar()
         } else {
             GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
         }
-        GC.drawButton(RECT(100+x*31,50+y*mheight,30,mheight-1),buffer,24);
+        GC.drawButton(RECT(100+x*31,60+y*mheight,30,mheight-1),buffer,24);
     }
 }
 
@@ -200,14 +234,35 @@ void AdaSetDatePage::handleEvent(uint8_t ix)
 
 void AdaSetDatePage::handleTap(TS_Point pt)
 {
+    char buffer[8];
+    
     for (uint8_t i = 0; i < mdays; ++i) {
         uint8_t x = (i + mdow) % 7;
         uint8_t y = (i + mdow) / 7;
         
         if (PtInRect(pt,RECT(100+x*31,50+y*mheight,31,mheight))) {
-            day = i + 1;
-            drawCalendar();
-            setDate();
+            if (day != i + 1) {
+                
+                /*
+                 *  Only draw the two buttons. This reduces flicker while
+                 *  picking days
+                 */
+                
+                uint8_t x = (i + mdow) % 7;
+                uint8_t y = (i + mdow) / 7;
+                GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
+                FormatNumber(buffer,i+1);
+                GC.drawButton(RECT(100+x*31,60+y*mheight,30,mheight-1),buffer,24);
+
+                x = ((day-1) + mdow) % 7;
+                y = ((day-1) + mdow) / 7;
+                GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
+                FormatNumber(buffer,day);
+                GC.drawButton(RECT(100+x*31,60+y*mheight,30,mheight-1),buffer,24);
+
+                day = i + 1;
+                setDate();
+            }
         }
     }
 }

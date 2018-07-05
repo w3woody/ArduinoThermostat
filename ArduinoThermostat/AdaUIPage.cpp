@@ -318,9 +318,19 @@ void AdaUIPage::draw()
                  *  Draw a red block to fill
                  */
                 
+                AdaUIRect r;
+                
+                r.x = 0;
+                r.w = 80;
+                r.y = TOPBARBOTTOM+LEFTBUTTONHEIGHT*i;
+                r.h = LEFTBUTTONHEIGHT*(j-i);
+                if (i > 0) {
+                    r.y++;
+                    r.h--;
+                }
+                
                 GC.setTextColor(ADAUI_BLACK,ADAUI_RED);
-                GC.drawButton(RECT(0,(TOPBARBOTTOM+1)+LEFTBUTTONHEIGHT*i,
-                                   80,LEFTBUTTONHEIGHT*(j-i)-1));
+                GC.drawButton(r);
                 i = j;
             }
         }

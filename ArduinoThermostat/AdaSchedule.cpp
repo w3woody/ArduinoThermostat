@@ -18,14 +18,14 @@
 
 AdaSchedule GSchedule;
 
-static const char string_spring[] PROGMEM = "SPRING";
-static const char string_summer[] PROGMEM = "SUMMER";
-static const char string_fall[]   PROGMEM = "FALL";
-static const char string_winter[] PROGMEM = "WINTER";
-static const char string_saver[]  PROGMEM = "SAVER";
+const char GStringSpring[] PROGMEM = "SPRING";
+const char GStringSummer[] PROGMEM = "SUMMER";
+const char GStringFall[]   PROGMEM = "FALL";
+const char GStringWinter[] PROGMEM = "WINTER";
+const char GStringSaver[]  PROGMEM = "SAVER";
 
 const char* const GScheduleName[] PROGMEM = {
-   string_spring, string_summer, string_fall, string_winter, string_saver
+   GStringSpring, GStringSummer, GStringFall, GStringWinter, GStringSaver
 };
 
 
@@ -90,15 +90,20 @@ void AdaSchedule::periodicUpdate()
      *  item we matched.
      *
      *  Note that the last trip item ranges from 0 to 27 and is dow * 4 + index
+     *
+     *  Note too all we do is change the temperature settings. We don't change
+     *  any of the other thermostat settings.
      */
     
     for (uint8_t i = 0; i < 4; ++i) {
         uint8_t tripItem = i + tr.dow * 4;
         if (tripItem == lastTripped) continue;
+        
         if ((d->setting[i].hour == tr.hour) && (d->setting[i].minute == tr.min)) {
             lastTripped = tripItem;
             GThermostat.heatSetting = d->setting[i].heat;
             GThermostat.coolSetting = d->setting[i].cool;
+            GThermostat.lastSet = curSchedule;
         }
     }
 }

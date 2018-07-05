@@ -37,6 +37,7 @@ AdaThermostat::AdaThermostat()
     
     unitState = 0;          // Unit starts off
     delay = 0;              // Time when we can change the HVAC state.
+    lastSet = 1;            // Who set me last? (0xFF == manual)
 }
 
 /*  AdaThermostat::periodicUpdate

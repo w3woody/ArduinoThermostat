@@ -53,13 +53,13 @@ static void DrawHeatCool(uint16_t xoff, uint8_t temp)
 
 static void DrawFan(uint8_t fan)
 {
-    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_OFF) ? ADAUI_RED : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_OFF) ? ADAUI_GREEN : ADAUI_BLACK);
     GC.drawButton(RECT(209,195,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_AUTO) ? ADAUI_RED : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_AUTO) ? ADAUI_GREEN : ADAUI_BLACK);
     GC.drawButton(RECT( 44,195,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_ON) ? ADAUI_RED : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_ON) ? ADAUI_GREEN : ADAUI_BLACK);
     GC.drawButton(RECT(128,195,19,37));
 }
 
@@ -120,24 +120,28 @@ void AdaTempPage::handleEvent(uint8_t ix)
         case AEVENT_FIRSTSPOT:
             if (GThermostat.heatSetting+5 < GThermostat.coolSetting) {
                 GThermostat.heatSetting++;
+                GThermostat.lastSet = 0xFF;
                 DrawHeatCool( 43,GThermostat.heatSetting);
             }
             break;
         case AEVENT_FIRSTSPOT+1:
             if (GThermostat.heatSetting > 50) {
                 GThermostat.heatSetting--;
+                GThermostat.lastSet = 0xFF;
                 DrawHeatCool( 43,GThermostat.heatSetting);
             }
             break;
         case AEVENT_FIRSTSPOT+2:
             if (GThermostat.coolSetting < 90) {
                 GThermostat.coolSetting++;
+                GThermostat.lastSet = 0xFF;
                 DrawHeatCool(157,GThermostat.coolSetting);
             }
             break;
         case AEVENT_FIRSTSPOT+3:
             if (GThermostat.heatSetting+5 < GThermostat.coolSetting) {
                 GThermostat.coolSetting--;
+                GThermostat.lastSet = 0xFF;
                 DrawHeatCool(157,GThermostat.coolSetting);
             }
             break;

@@ -17,6 +17,12 @@
 /*                                                                      */
 /************************************************************************/
 
+extern const char GStringSpring[];
+extern const char GStringSummer[];
+extern const char GStringFall[];
+extern const char GStringWinter[];
+extern const char GStringSaver[];
+
 extern const char* const GScheduleName[];
 
 /************************************************************************/

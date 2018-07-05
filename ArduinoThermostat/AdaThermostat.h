@@ -77,6 +77,7 @@ class AdaThermostat
         uint8_t         fanSetting;
         uint8_t         curTemperature;
         uint8_t         unitState;
+        uint8_t         lastSet;
     
     private:
         uint32_t        delay;

@@ -11,9 +11,41 @@
 #include "AdaThermostat.h"
 #include "AdaSettingsPage.h"
 #include "AdaUtils.h"
+#include "AdaSchedule.h"
 
 #include "AdaTempPage.h"
-#include "AdaSchedulePage.h"
+#include "AdaSchedulePickerPage.h"
+
+#ifdef __AVR__
+    #include <avr/pgmspace.h>
+#elif defined(ESP8266) || defined(ESP32)
+    #include <pgmspace.h>
+#endif
+
+/************************************************************************/
+/*                                                                      */
+/*  Support                                                             */
+/*                                                                      */
+/************************************************************************/
+
+/*
+ *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
+ *  space if we are missing some definitions
+ */
+
+#ifndef pgm_read_byte
+    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+#endif
+
+#ifndef pgm_read_word
+    #define pgm_read_word(addr) (*(const unsigned short *)(addr))
+#endif
+
+#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
+    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
+#else
+    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
+#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -45,7 +77,7 @@ static const AdaPage AHome PROGMEM = {
 /************************************************************************/
 
 static AdaTempPage GTempPage;
-static AdaSchedulePage GSchedulePage;
+static AdaSchedulePickerPage GSchedulePage;
 static AdaSettingsPage GSettingsPage;
 
 /************************************************************************/
@@ -237,7 +269,7 @@ void DrawArc(uint8_t lastState, int16_t x, int16_t y)
     } else if (lastState & ADAHVAC_FAN) {
         color = ADAUI_YELLOW;
     } else {
-        color = ADAUI_GREEN;
+        color = 0x4208; // 0x4310;
     }
     
     DrawRLEBitmap(Arc_bitmap,color,x,y);
@@ -295,20 +327,6 @@ void drawTemperatureMarker(uint8_t temp, uint16_t color)
     DrawMarker(temp,color,true);
 }
 
-void drawTemperature(uint8_t temp)
-{
-    // Draw the temperature
-    char buffer[8];
-    FormatNumber(buffer,temp);
-    
-    GC.setTextColor(0xFFFF,ADAUI_BLACK);
-    GC.setFont(&Narrow75D);
-    GC.drawButton(RECT(160,100,80,65),buffer,56,0,KCenterAlign);
-
-    // Draw the marker
-    DrawMarker(temp,0xFFFF,false);    
-}
-
 /************************************************************************/
 /*                                                                      */
 /*  Construction                                                        */
@@ -354,6 +372,15 @@ void AdaHomePage::drawTitle()
 void AdaHomePage::drawContents()
 {
     char buffer[8];
+
+    /*
+     *  Draw the thermostat settings
+     */
+    
+    GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
+    GC.setFont(&Narrow25);
+    drawTemperatureMarker(lastHeat,0xF800);       // red
+    drawTemperatureMarker(lastCool,0x001F);       // blue
     
     // Draw temperature arc
     DrawArc(GThermostat.unitState,120,70);
@@ -366,18 +393,26 @@ void AdaHomePage::drawContents()
     FormatNumber(buffer,GThermostat.coolSetting);
     GC.drawButton(RECT(201,200,40,37),buffer,28,KCornerUR | KCornerLR,KCenterAlign);
     
-    // Draw type of display
-    GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
-    GC.setFont(&Narrow25);
-    GC.drawButton(RECT(160,160,80,30),F("WINTER"),26,0,KCenterAlign);
-    
-    // Draw the temperature
-    drawTemperature(GThermostat.curTemperature);
+    // Draw the current temperature marker
+    DrawMarker(GThermostat.curTemperature,0xFFFF,false);
 
-    GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
-    GC.setFont(&Narrow25);
-    drawTemperatureMarker(lastHeat,0xF800);       // red
-    drawTemperatureMarker(lastCool,0x001F);       // blue
+    // Draw the temperature
+    FormatNumber(buffer,GThermostat.curTemperature);
+    GC.setTextColor(0xFFFF,ADAUI_BLACK);
+    GC.setFont(&Narrow75D);
+
+    // Draw type of schedule active and the temperature itself
+    if (GThermostat.lastSet != 0xFF) {
+        GC.drawButton(RECT(160,100,80,65),buffer,56,0,KCenterAlign);
+
+        const __FlashStringHelper *str;
+        str = (const __FlashStringHelper *)pgm_read_pointer(GScheduleName+GThermostat.lastSet);
+        GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
+        GC.setFont(&Narrow25);
+        GC.drawButton(RECT(160,160,80,30),str,26,0,KCenterAlign);
+    } else {
+        GC.drawButton(RECT(160,115,80,65),buffer,56,0,KCenterAlign);
+    }
 }
 
 /*  AdaHomePage::handleEvent

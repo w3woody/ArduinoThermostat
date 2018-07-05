@@ -71,10 +71,9 @@ void FormatNumber(char *dest, uint16_t temp)
     }
 }
 
-static void FormatTimeInternal(char *ptr, AdaTimeRecord &tr)
+void FormatTime(char *ptr, uint8_t hour, uint8_t minute)
 {
     bool pm;
-    uint8_t hour = tr.hour;
 
     pm = hour >= 12;
     hour %= 12;
@@ -87,8 +86,8 @@ static void FormatTimeInternal(char *ptr, AdaTimeRecord &tr)
     }
     *ptr++ = '0' + hour;
     *ptr++ = ':';
-    *ptr++ = '0' + (tr.min / 10);
-    *ptr++ = '0' + (tr.min % 10);
+    *ptr++ = '0' + (minute / 10);
+    *ptr++ = '0' + (minute % 10);
     *ptr++ = ' ';
     if (pm) {
         *ptr++ = 'P';
@@ -121,13 +120,13 @@ void FormatDayTime(char *ptr, uint32_t time)
 {
     AdaTimeRecord tr = AdaSecToTime(time);
     ptr = FormatDay(ptr,tr.dow);
-    FormatTimeInternal(ptr,tr);
+    FormatTime(ptr,tr.hour,tr.min);
 }
 
 void FormatTime(char *buffer, uint32_t time)
 {
     AdaTimeRecord tr = AdaSecToTime(time);
-    FormatTimeInternal(buffer,tr);
+    FormatTime(buffer,tr.hour,tr.min);
 }
 
 void FormatDate(char *ptr, uint32_t time)
