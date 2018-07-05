@@ -9,6 +9,7 @@
 #include "Narrow75D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
+#include "AdaSchedule.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -18,19 +19,14 @@
 
 static const char string_title[] PROGMEM = "SCHEDULE";
 static const char string_back[] PROGMEM = "\177DONE";
-static const char string_edit[] PROGMEM = "EDIT";
 
 static const AdaUIRect AScheduleRects[] PROGMEM = {
     { 160, 200, 40, 37 },       // Heat button
     { 201, 200, 40, 37 }        // Cool button
 };
 
-static const char* const AScheduleTitles[] PROGMEM = {
-    string_edit, NULL, NULL, NULL, NULL
-};
-
 static const AdaPage ASchedule PROGMEM = {
-    string_title, string_back, AScheduleTitles, AScheduleRects, 2
+    string_title, string_back, GScheduleName, AScheduleRects, 2
 };
 
 /************************************************************************/
