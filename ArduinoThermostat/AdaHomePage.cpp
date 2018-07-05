@@ -54,6 +54,19 @@ static AdaSettingsPage GSettingsPage;
 /*                                                                      */
 /************************************************************************/
 
+const uint8_t Bullet_bitmap[] PROGMEM = {
+    0x02, 0x85, 0x80,
+    0x01, 0x87, 0x80,
+    0x89, 0x80,
+    0x89, 0x80,
+    0x89, 0x80,
+    0x89, 0x80,
+    0x89, 0x80,
+    0x01, 0x87, 0x80,
+    0x02, 0x85, 0x00
+};
+
+
 // Bitmap for ring
 const uint8_t Arc_bitmap[] PROGMEM = {
     0x80,0x44,0x99,0x80,0x3E,0xA4,0x80,0x3B,
@@ -148,24 +161,55 @@ const uint8_t Arc_bitmap[] PROGMEM = {
     0x82,0x6F,0x82,0x00
 };
 
-void DrawArc(uint8_t lastState, int16_t x, int16_t y)
+const int8_t Arc_positions[] PROGMEM = {
+    -60, 60,
+    -66, 52,
+    -72, 44,
+    -77, 35,
+    -80, 26,
+    -83, 16,
+    -84, 6,
+    -84, -3,
+    -83, -13,
+    -81, -23,
+    -78, -32,
+    -74, -41,
+    -68, -49,
+    -62, -57,
+    -55, -64,
+    -47, -70,
+    -38, -75,
+    -29, -79,
+    -19, -82,
+    -9, -84,
+    0, -85,
+    9, -84,
+    19, -82,
+    29, -79,
+    38, -75,
+    47, -70,
+    55, -64,
+    62, -57,
+    68, -49,
+    74, -41,
+    78, -32,
+    81, -23,
+    83, -13,
+    84, -3,
+    84, 6,
+    83, 16,
+    80, 26,
+    77, 35,
+    72, 44,
+    66, 52,
+    60, 60
+};
+
+void DrawRLEBitmap(const uint8_t *p, uint16_t color, int16_t x, int16_t y)
 {
     int xc = x;
     int yc = y;
-    const uint8_t *p = Arc_bitmap;
     uint8_t c;
-    
-    // Arc color gives state of HVAC
-    uint16_t color;
-    if (lastState & ADAHVAC_HEAT) {
-        color = 0xF800;
-    } else if (lastState & ADAHVAC_COOL) {
-        color = 0x001F;
-    } else if (lastState & ADAHVAC_FAN) {
-        color = ADAUI_YELLOW;
-    } else {
-        color = ADAUI_GREEN;
-    }
     
     GC.startWrite();
 
@@ -183,50 +227,66 @@ void DrawArc(uint8_t lastState, int16_t x, int16_t y)
     GC.endWrite();
 }
 
+void DrawArc(uint8_t lastState, int16_t x, int16_t y)
+{
+    uint16_t color;
+    if (lastState & ADAHVAC_HEAT) {
+        color = 0xF800;
+    } else if (lastState & ADAHVAC_COOL) {
+        color = 0x001F;
+    } else if (lastState & ADAHVAC_FAN) {
+        color = ADAUI_YELLOW;
+    } else {
+        color = ADAUI_GREEN;
+    }
+    
+    DrawRLEBitmap(Arc_bitmap,color,x,y);
+}
+
 void DrawMarker(uint8_t temp, uint16_t color, bool outside)
 {
     int16_t n = temp;
     if (n < 50) n = 50;
     if (n > 90) n = 90;
-    double angle = ((3*M_PI/2) * (90 - n))/40 - (M_PI/4);
-
-    double x = cos(angle);
-    double y = - sin(angle);
-
-    int16_t x1,y1,x2,y2;
-    if (outside) {
-        x1 = 200 + x * 75;
-        y1 = 150 + y * 75;
-        x2 = 200 + x * 85;
-        y2 = 150 + y * 85;
-    } else {
-        x1 = 200 + x * 75;
-        y1 = 150 + y * 75;
-        x2 = 200 + x * 65;
-        y2 = 150 + y * 65;
-    }
-
-    GC.drawLine(x1,y1,x2,y2,color);       // white
-    GC.fillCircle(x2,y2,5,color);
+    n -= 50;
     
-    if (angle > M_PI) {
-        x2 -= 29;
-        y2 += 18;
-    } else if (angle > M_PI/2) {
-        x2 -= 29;
-        y2 -= 3;
-    } else if (angle > 0) {
-        x2 += 7;
-        y2 -= 3;
+    int16_t xpos = (int8_t)pgm_read_byte(Arc_positions + n*2);
+    int16_t ypos = (int8_t)pgm_read_byte(Arc_positions + n*2+1);
+    if (!outside) {
+        xpos = (xpos * 66)/85;
+        ypos = (ypos * 66)/85;
+    }
+    xpos += 200;
+    ypos += 150;
+    
+    DrawRLEBitmap(Bullet_bitmap,color,xpos-4,ypos-4);
+    
+    /*
+     *  Bump text depending on position around Arc_bitmap
+     */
+     
+    if (xpos < 0) {
+        if (ypos > 0) {
+            xpos -= 29;
+            ypos -= 3;
+        } else {
+            xpos -= 29;
+            ypos += 18;
+        }
     } else {
-        x2 += 7;
-        y2 += 18;
+        if (ypos > 0) {
+            xpos += 7;
+            ypos -= 3;
+        } else {
+            xpos += 7;
+            ypos += 18;
+        }
     }
     
     if (outside) {
         char buffer[8];
         FormatNumber(buffer,temp);
-        GC.drawButton(RECT(x2,y2-19,22,24),buffer,19,0,KCenterAlign);
+        GC.drawButton(RECT(xpos,ypos-19,22,24),buffer,19,0,KCenterAlign);
     }
 }
 

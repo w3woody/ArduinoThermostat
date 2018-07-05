@@ -153,15 +153,34 @@ int main(int argc, const char * argv[])
 //		}
 //	}
 
-	for (double a = -M_PI/4; a < 5*M_PI/4; a += 0.01) {
+//	for (double a = -M_PI/4; a < 5*M_PI/4; a += 0.01) {
+//		double x = cos(a);
+//		double y = -sin(a);
+//
+//		for (double r = 70; r < 80; r += 0.5) {
+//			setPixel(floor(x*r + 0.5) + 80, floor(y*r + 0.5) + 80);
+//		}
+//	}
+
+	for (double a = 0; a < M_PI*2; a += 0.01) {
 		double x = cos(a);
 		double y = -sin(a);
-
-		for (double r = 70; r < 80; r += 0.5) {
-			setPixel(floor(x*r + 0.5) + 80, floor(y*r + 0.5) + 80);
+		for (double r = 0; r < 5; r += 0.5) {
+			setPixel(floor(x*r + 0.5) + 5, floor(y*r + 0.5) + 5);
 		}
 	}
 
 	dumpBytes();
 	printf("\n");
+
+	for (int n = 50; n <= 90; ++n) {
+    	double angle = ((3*M_PI/2) * (90 - n))/40 - (M_PI/4);
+		double x = cos(angle);
+		double y = - sin(angle);
+
+		int8_t xoff = x * 85;
+		int8_t yoff = y * 85;
+
+		printf("%d, %d,\n",xoff,yoff);
+	}
 }
