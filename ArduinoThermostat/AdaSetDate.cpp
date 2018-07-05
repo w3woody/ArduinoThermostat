@@ -72,12 +72,12 @@ AdaSetDatePage::AdaSetDatePage() : AdaUIPage(&ADate)
 {  
 }
 
-/*  AdaSetDatePage::loadDate
+/*  AdaSetDatePage::viewWillAppear
  *
  *      Load date
  */
 
-void AdaSetDatePage::loadDate()
+void AdaSetDatePage::viewWillAppear()
 {
     AdaTimeRecord date = AdaSecToTime(AdaGetTime());
     day = date.day;

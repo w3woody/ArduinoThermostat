@@ -105,10 +105,14 @@ class AdaUIPage
 
         virtual void    handleTap(TS_Point pt); // Allow other tap handling
         virtual void    handleEvent(uint8_t ix); // Hit Index
+        
         virtual void    periodicEvents();   // Called periodically to run events
+        
         virtual void    drawTitle();        // Override if custom title        
         virtual void    drawContents();     // Override for custom contents
         
+        virtual void    viewWillAppear();
+        virtual void    viewWillDisappear();
     protected:
         void            processPageEvents();
         

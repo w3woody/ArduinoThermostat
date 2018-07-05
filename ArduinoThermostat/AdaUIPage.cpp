@@ -92,6 +92,9 @@ AdaUIPage::AdaUIPage(const AdaPage *p)
 
 void AdaUIPage::pushPage(AdaUIPage *page)
 {
+    if (page) page->viewWillAppear();
+    if (top) top->viewWillDisappear();
+    
     page->next = top;
     top = page;
     
@@ -101,6 +104,9 @@ void AdaUIPage::pushPage(AdaUIPage *page)
 void AdaUIPage::popPage()
 {
     if (next) {
+        viewWillDisappear();
+        next->viewWillAppear();
+        
         top = next;
         top->invalidFlags = 0xFF; // Force redraw of top page.
     }
@@ -372,6 +378,14 @@ void AdaUIPage::handleEvent(uint8_t ix)
 }
 
 void AdaUIPage::periodicEvents()
+{
+}
+
+void AdaUIPage::viewWillAppear()
+{
+}
+
+void AdaUIPage::viewWillDisappear()
 {
 }
 

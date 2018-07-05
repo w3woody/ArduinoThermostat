@@ -25,12 +25,12 @@ class AdaSetDatePage: public AdaUIPage
     public:
                         AdaSetDatePage();
 
-        void            loadDate();
         virtual void    drawContents();     // Override for custom contents
 
         virtual void    handleEvent(uint8_t ix);
         virtual void    handleTap(TS_Point pt);
-        
+        virtual void    viewWillAppear();
+
     private:
         void            drawMonth();
         void            drawYear();

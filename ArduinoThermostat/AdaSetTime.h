@@ -24,10 +24,10 @@ class AdaSetTimePage: public AdaUIPage
     public:
                         AdaSetTimePage();
                         
-        void            loadTime();
         virtual void    drawContents();     // Override for custom contents
 
         virtual void    handleEvent(uint8_t ix);
+        virtual void    viewWillAppear();
 
     private:
         void            drawTime();

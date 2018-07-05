@@ -24,6 +24,7 @@ class AdaSchedulePage: public AdaUIPage
     public:
                         AdaSchedulePage();
                         
+        virtual void    viewWillAppear();
         virtual void    drawContents();
         virtual void    drawTitle();        // Override if custom title        
         virtual void    handleEvent(uint8_t ix);

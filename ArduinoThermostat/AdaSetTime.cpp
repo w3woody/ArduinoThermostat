@@ -49,7 +49,7 @@ AdaSetTimePage::AdaSetTimePage() : AdaUIPage(&ATime)
 { 
 }
 
-void AdaSetTimePage::loadTime()
+void AdaSetTimePage::viewWillAppear()
 {
     AdaTimeRecord tr = AdaSecToTime(AdaGetTime());
     hour = tr.hour;

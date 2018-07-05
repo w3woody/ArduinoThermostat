@@ -93,11 +93,9 @@ void AdaSettingsPage::handleEvent(uint8_t ix)
 {
     switch (ix) {
         case AEVENT_LEFTBUTTON1:
-            GSetTimePage.loadTime();
             pushPage(&GSetTimePage);
             break;
         case AEVENT_LEFTBUTTON2:
-            GSetDatePage.loadDate();
             pushPage(&GSetDatePage);
             break;
     }
