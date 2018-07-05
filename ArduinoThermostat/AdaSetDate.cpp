@@ -83,7 +83,6 @@ void AdaSetDatePage::drawYear()
  *  ### TODO: 
  *
  *      Set calendar date.
- *      Draw Calendar should erase prior months.
  *      Hit detection in calendar
  */
 
@@ -102,23 +101,25 @@ void AdaSetDatePage::drawCalendar()
     uint32_t start = AdaGregorianDayCount(1,month,year);
     uint32_t end = AdaGregorianDayCount(1,nmonth,nyear);
     
-    uint8_t dow = start % 7;            // position of first day
-    uint8_t ndays = end - start;        // # days in the month
-    uint8_t nweeks = (ndays + dow + 6)/7;   // # visible weeks
+    mdow = start % 7;            // position of first day
+    mdays = end - start;        // # days in the month
+    mweeks = (mdays + mdow + 6)/7;   // # visible weeks
     
-    uint8_t h = (nweeks <= 5) ? 38 : 31;    // Some months are short.
+    mheight = (mweeks <= 5) ? 38 : 31;    // Some months are short.
     
-    for (uint8_t i = 0; i < ndays; ++i) {
+    GC.fillRect(100,50,220,190,ADAUI_BLACK);
+    
+    for (uint8_t i = 0; i < mdays; ++i) {
         FormatNumber(buffer,i+1);
-        uint8_t x = (i + dow) % 7;
-        uint8_t y = (i + dow) / 7;
+        uint8_t x = (i + mdow) % 7;
+        uint8_t y = (i + mdow) / 7;
         
         if (i == day-1) {
             GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
         } else {
             GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
         }
-        GC.drawButton(RECT(100+x*31,50+y*h,30,h-1),buffer,24);
+        GC.drawButton(RECT(100+x*31,50+y*mheight,30,mheight-1),buffer,24);
     }
 }
 
@@ -141,6 +142,15 @@ void AdaSetDatePage::drawContents()
     drawCalendar();
 }
 
+void AdaSetDatePage::setDate()
+{
+    AdaTimeRecord tr = AdaSecToTime(AdaGetTime());
+    tr.day = day;
+    tr.month = month;
+    tr.year = year;
+    AdaSetTime(AdaTimeToSec(tr));
+}
+
 /*  AdaSetDatePage::handleEvent
  *
  *      Handle tap events
@@ -159,6 +169,7 @@ void AdaSetDatePage::handleEvent(uint8_t ix)
             day = 1;
             drawMonth();
             drawCalendar();
+            setDate();
             break;
         case AEVENT_FIRSTSPOT+1:
             ++month;
@@ -170,16 +181,33 @@ void AdaSetDatePage::handleEvent(uint8_t ix)
             day = 1;
             drawMonth();
             drawCalendar();
+            setDate();
             break;
         case AEVENT_FIRSTSPOT+2:
             if (year > 2017) --year;
             drawYear();
             drawCalendar();
+            setDate();
             break;
         case AEVENT_FIRSTSPOT+3:
             ++year;
             drawYear();
             drawCalendar();
+            setDate();
             break;
+    }
+}
+
+void AdaSetDatePage::handleTap(TS_Point pt)
+{
+    for (uint8_t i = 0; i < mdays; ++i) {
+        uint8_t x = (i + mdow) % 7;
+        uint8_t y = (i + mdow) / 7;
+        
+        if (PtInRect(pt,RECT(100+x*31,50+y*mheight,31,mheight))) {
+            day = i + 1;
+            drawCalendar();
+            setDate();
+        }
     }
 }

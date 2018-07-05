@@ -7,6 +7,7 @@
 #define _AdaUtilsPage_h
 
 #include <stdint.h>
+#include "AdaUIScreen.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -22,6 +23,8 @@ extern const char GStringDOW[];
 /*  Utilities                                                           */
 /*                                                                      */
 /************************************************************************/
+
+bool PtInRect(TS_Point pt, AdaUIRect r);
 
 extern void FormatNumber(char *dest, uint16_t temp);
 extern void FormatDayTime(char *dest, uint32_t time);

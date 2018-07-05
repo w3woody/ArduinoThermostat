@@ -29,15 +29,23 @@ class AdaSetDatePage: public AdaUIPage
         virtual void    drawContents();     // Override for custom contents
 
         virtual void    handleEvent(uint8_t ix);
+        virtual void    handleTap(TS_Point pt);
         
     private:
         void            drawMonth();
         void            drawYear();
         void            drawCalendar();
         
+        void            setDate();
+        
         uint8_t         day;
         uint8_t         month;
         uint16_t        year;
+        
+        uint8_t         mdow;
+        uint8_t         mdays;
+        uint8_t         mweeks;
+        uint8_t         mheight;
 };
 
 

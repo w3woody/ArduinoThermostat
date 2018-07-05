@@ -16,6 +16,7 @@
 
 #include "AdaUI.h"
 #include "AdaUIScreen.h"
+#include "AdaUtils.h"
 
 /************************************************************************/
 /*                                                                      */

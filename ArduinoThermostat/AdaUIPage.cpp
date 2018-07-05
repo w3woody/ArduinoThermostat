@@ -61,25 +61,6 @@
 
 AdaUIPage *AdaUIPage::top;
 
-/************************************************************************/
-/*                                                                      */
-/*  Support                                                             */
-/*                                                                      */
-/************************************************************************/
-
-/*  PtInRect
- *
- *      Is point in rect?
- */
-
-static bool PtInRect(TS_Point pt, AdaUIRect r)
-{
-    if (pt.x < r.x) return false;
-    if (pt.y < r.y) return false;
-    if (pt.x > r.x + r.w) return false;
-    if (pt.y > r.y + r.h) return false;
-    return true;
-}
 
 /************************************************************************/
 /*                                                                      */

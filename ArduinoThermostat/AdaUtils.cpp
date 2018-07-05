@@ -31,6 +31,20 @@ const char GStringDOW[]   PROGMEM = "SUN\0MON\0TUE\0WED\0THU\0FRI\0SAT";
 /*                                                                      */
 /************************************************************************/
 
+/*  PtInRect
+ *
+ *      Is point in rect?
+ */
+
+bool PtInRect(TS_Point pt, AdaUIRect r)
+{
+    if (pt.x < r.x) return false;
+    if (pt.y < r.y) return false;
+    if (pt.x > r.x + r.w) return false;
+    if (pt.y > r.y + r.h) return false;
+    return true;
+}
+
 void FormatNumber(char *dest, uint16_t temp)
 {
     uint8_t pos = 0;
