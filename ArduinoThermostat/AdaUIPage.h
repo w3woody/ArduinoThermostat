@@ -15,6 +15,7 @@
 #define _AdaUIPage_h
 
 #include "AdaUI.h"
+#include "AdaUIScreen.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -101,6 +102,7 @@ class AdaUIPage
                                 invalidFlags |= INVALIDATE_CONTENT;
                             }
 
+        virtual void    handleTap(TS_Point pt); // Allow other tap handling
         virtual void    handleEvent(uint8_t ix); // Hit Index
         virtual void    periodicEvents();   // Called periodically to run events
         virtual void    drawTitle();        // Override if custom title        

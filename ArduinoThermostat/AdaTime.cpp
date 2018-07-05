@@ -132,7 +132,7 @@ static int8_t IsLeapYear(uint16_t year)
 	return 1;						/* like 2000 */
 }
 
-static uint32_t GregorianDayCount(uint8_t day, uint8_t month, uint16_t year)
+uint32_t AdaGregorianDayCount(uint8_t day, uint8_t month, uint16_t year)
 {
 	uint16_t y1 = year - 1;
 	uint32_t tmp;
@@ -178,9 +178,9 @@ static uint16_t GregorianYear(uint32_t dcount)
 void GregorianDate(uint32_t dcount, AdaTimeRecord &tr)
 {
 	tr.year = GregorianYear(dcount);
-	uint16_t priorDays = dcount - GregorianDayCount(1,1,tr.year);
+	uint16_t priorDays = dcount - AdaGregorianDayCount(1,1,tr.year);
 	uint8_t correction;
-	uint32_t march = GregorianDayCount(1,3,tr.year);	// march 1
+	uint32_t march = AdaGregorianDayCount(1,3,tr.year);	// march 1
 
 	if (dcount < march) {
 		correction = 0;
@@ -191,7 +191,7 @@ void GregorianDate(uint32_t dcount, AdaTimeRecord &tr)
 	}
 
 	tr.month = (12 * (priorDays + correction) + 373)/367;
-	tr.day = dcount - GregorianDayCount(1,tr.month,tr.year) + 1;
+	tr.day = dcount - AdaGregorianDayCount(1,tr.month,tr.year) + 1;
 	
 	// Get the day of week. Epoch (1/1/2017) was Sunday...
 	tr.dow = dcount % 7;
@@ -232,9 +232,14 @@ AdaTimeRecord AdaSecToTime(uint32_t time)
 
 uint32_t AdaTimeToSec(const AdaTimeRecord &tr)
 {
-    uint32_t dcount = GregorianDayCount(tr.day,tr.month,tr.year);
+    uint32_t dcount = AdaGregorianDayCount(tr.day,tr.month,tr.year);
     dcount = (dcount * 24) + tr.hour;
     dcount = (dcount * 60) + tr.min;
     dcount = (dcount * 60) + tr.sec;
     return dcount;
+}
+
+uint8_t AdaCalcDOW(uint8_t day, uint8_t month, uint16_t year)
+{
+    return AdaGregorianDayCount(day,month,year) % 7;
 }

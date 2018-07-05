@@ -7,7 +7,6 @@
  */
 
 #include "AdaUIPage.h"
-#include "AdaUIScreen.h"
 #include "Narrow25.h"
 
 #ifdef __AVR__
@@ -224,6 +223,12 @@ void AdaUIPage::processPageEvents()
                     return;
                 }
             }
+            
+            /*
+             *  Try another way
+             */
+            
+            handleTap(p);
         }
     } else {
         /*
@@ -376,5 +381,9 @@ void AdaUIPage::handleEvent(uint8_t ix)
 }
 
 void AdaUIPage::periodicEvents()
+{
+}
+
+void AdaUIPage::handleTap(TS_Point pt)
 {
 }

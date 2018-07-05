@@ -22,8 +22,8 @@
 /*                                                                      */
 /************************************************************************/
 
-const char string_month[] PROGMEM = "JAN\0FEB\0MAR\0APR\0MAY\0JUN\0JUL\0AUG\0SEP\0OCT\0NOV\0DEC";
-const char string_dow[]   PROGMEM = "SUN\0MON\0TUE\0WED\0THU\0FRI\0SAT";
+const char GStringMonth[] PROGMEM = "JAN\0FEB\0MAR\0APR\0MAY\0JUN\0JUL\0AUG\0SEP\0OCT\0NOV\0DEC";
+const char GStringDOW[]   PROGMEM = "SUN\0MON\0TUE\0WED\0THU\0FRI\0SAT";
 
 /************************************************************************/
 /*                                                                      */
@@ -62,7 +62,7 @@ static void FormatTimeInternal(char *ptr, AdaTimeRecord &tr)
     bool pm;
     uint8_t hour = tr.hour;
 
-    pm = hour > 12;
+    pm = hour >= 12;
     hour %= 12;
     if (hour == 0) hour = 12;
     
@@ -100,7 +100,7 @@ static char *AppendChar(char *ptr, char *ref)
 
 static char *FormatDay(char *ptr, uint8_t dow)
 {
-    return AppendChar(ptr,string_dow + dow * 4);
+    return AppendChar(ptr,GStringDOW + dow * 4);
 }
 
 void FormatDayTime(char *ptr, uint32_t time)
@@ -122,7 +122,7 @@ void FormatDate(char *ptr, uint32_t time)
     
     ptr = FormatDay(ptr,tr.dow);
     
-    ptr = AppendChar(ptr,string_month + (tr.month - 1) * 4);
+    ptr = AppendChar(ptr,GStringMonth + (tr.month - 1) * 4);
     
     if (tr.day >= 10) {
         *ptr++ = '0' + tr.day/10;

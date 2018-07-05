@@ -11,6 +11,9 @@
 #include "AdaThermostat.h"
 #include "AdaUtils.h"
 
+#include "AdaSetDate.h"
+#include "AdaSetTime.h"
+
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
@@ -35,6 +38,15 @@ static const char* const ASettingsTitles[] PROGMEM = {
 static const AdaPage ASettings PROGMEM = {
     string_title, string_back, ASettingsTitles, ASettingsRects, 2
 };
+
+/************************************************************************/
+/*                                                                      */
+/*  Globals                                                             */
+/*                                                                      */
+/************************************************************************/
+
+static AdaSetDatePage GSetDatePage;
+static AdaSetTimePage GSetTimePage;
 
 /************************************************************************/
 /*                                                                      */
@@ -79,4 +91,14 @@ void AdaSettingsPage::drawContents()
 
 void AdaSettingsPage::handleEvent(uint8_t ix)
 {
+    switch (ix) {
+        case AEVENT_LEFTBUTTON1:
+            GSetTimePage.loadTime();
+            pushPage(&GSetTimePage);
+            break;
+        case AEVENT_LEFTBUTTON2:
+            GSetDatePage.loadDate();
+            pushPage(&GSetDatePage);
+            break;
+    }
 }
