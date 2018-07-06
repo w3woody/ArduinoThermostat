@@ -36,18 +36,8 @@
 static const char string_title[] PROGMEM = "SET TIME";
 static const char string_back[] PROGMEM = "\177DONE";
 
-static const char string_time[] PROGMEM = "TIME";
-static const char string_date[] PROGMEM = "DATE";
-
-static const AdaUIRect ATimeRects[] PROGMEM = {
-    {  73, 83,40,37 },       // Hour++
-    {  73,121,40,37 },       // Hour--
-    { 207, 83,40,37 },       // Min++
-    { 207,121,40,37 }        // Min--
-};
-
 static const AdaPage ATime PROGMEM = {
-    string_title, string_back, NULL, ATimeRects, 4
+    string_title, string_back, NULL, NULL, 0
 };
 
 static const char buttons[] PROGMEM = "789456123A0P";
@@ -207,6 +197,8 @@ void AdaSetTimePage::handleTap(TS_Point pt)
     
     uint8_t x = (pt.x - 104 - offset)/38;
     uint8_t y = (pt.y - 89)/38;
+
+
     if (x >= 3) return;
     if (y >= 4) return;
     
@@ -258,8 +250,5 @@ void AdaSetTimePage::handleTap(TS_Point pt)
     changed = true;
     drawTime();
     drawKeyboard();
-    
-    GC.setCursor(0,120);
-    GC.print(curPos);
 }
 

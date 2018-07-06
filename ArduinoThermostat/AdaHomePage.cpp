@@ -297,8 +297,8 @@ void DrawMarker(uint8_t temp, uint16_t color, bool outside)
      *  Bump text depending on position around Arc_bitmap
      */
      
-    if (xpos < 0) {
-        if (ypos > 0) {
+    if (xpos < 200) {
+        if (ypos < 150) {
             xpos -= 29;
             ypos -= 3;
         } else {
@@ -306,7 +306,7 @@ void DrawMarker(uint8_t temp, uint16_t color, bool outside)
             ypos += 18;
         }
     } else {
-        if (ypos > 0) {
+        if (ypos < 150) {
             xpos += 7;
             ypos -= 3;
         } else {

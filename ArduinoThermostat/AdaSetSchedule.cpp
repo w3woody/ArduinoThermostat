@@ -44,7 +44,7 @@ static const AdaUIRect ATimeRects[] PROGMEM = {
 };
 
 static const AdaPage ATime PROGMEM = {
-    string_title, string_back, NULL, ATimeRects, 4
+    string_title, string_back, NULL, ATimeRects, 0
 };
 
 /************************************************************************/
