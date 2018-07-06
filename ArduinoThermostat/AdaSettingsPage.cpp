@@ -63,6 +63,26 @@ AdaSettingsPage::AdaSettingsPage() : AdaUIPage(&ASettings)
 {  
 }
 
+/*  AdaSettingsPage::ViewWillAppear
+ *
+ *      Determine if the time has changed by looking at the time record.
+ *  The time object is the only thing that doesn't directly update the time,
+ 8  because we reuse it in our schedule code.
+ */
+
+void AdaSettingsPage::viewWillAppear()
+{
+    if (GSetTimePage.changed) {
+        AdaTimeRecord tr = AdaSecToTime(AdaGetTime());
+        tr.hour = GSetTimePage.hour;
+        tr.min = GSetTimePage.minute;
+        tr.sec = 0;
+        AdaSetTime(AdaTimeToSec(tr));
+    }
+    
+    GSetTimePage.changed = false;
+}
+
 /*  AdaSettingsPage::drawContents
  *
  *      Draw the contents
@@ -93,8 +113,14 @@ void AdaSettingsPage::handleEvent(uint8_t ix)
 {
     switch (ix) {
         case AEVENT_LEFTBUTTON1:
-            pushPage(&GSetTimePage);
-            break;
+            {
+                AdaTimeRecord tr = AdaSecToTime(AdaGetTime());
+                GSetTimePage.hour = tr.hour;
+                GSetTimePage.minute = tr.min;
+                GSetTimePage.changed = false;
+                pushPage(&GSetTimePage);
+                break;
+            }
         case AEVENT_LEFTBUTTON2:
             pushPage(&GSetDatePage);
             break;

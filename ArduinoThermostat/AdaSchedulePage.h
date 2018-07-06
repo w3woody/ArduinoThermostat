@@ -32,6 +32,7 @@ class AdaSchedulePage: public AdaUIPage
     private:
         uint8_t         selDOW;
         uint8_t         selSchedule;
+        uint8_t         selItem;
 };
 
 

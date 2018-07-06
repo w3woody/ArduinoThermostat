@@ -24,6 +24,7 @@ class AdaSettingsPage: public AdaUIPage
     public:
                         AdaSettingsPage();
                         
+        virtual void    viewWillAppear();
         virtual void    drawContents();     // Override for custom contents
 
         virtual void    handleEvent(uint8_t ix);

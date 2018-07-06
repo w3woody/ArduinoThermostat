@@ -92,8 +92,8 @@ AdaUIPage::AdaUIPage(const AdaPage *p)
 
 void AdaUIPage::pushPage(AdaUIPage *page)
 {
-    if (page) page->viewWillAppear();
     if (top) top->viewWillDisappear();
+    if (page) page->viewWillAppear();
     
     page->next = top;
     top = page;

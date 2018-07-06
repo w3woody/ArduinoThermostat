@@ -11,6 +11,7 @@
 #include "AdaThermostat.h"
 #include "AdaSchedule.h"
 #include "AdaUtils.h"
+#include "AdaSetSchedule.h"
 
 #ifdef __AVR__
     #include <avr/pgmspace.h>
@@ -42,6 +43,8 @@ static const AdaPage ASchedule PROGMEM = {
 };
 
 static AdaScheduleDay GPaste;       // Where we store our stuff
+
+static AdaSetSchedulePage GSchedulePage;    // Page to set schedule
 
 /************************************************************************/
 /*                                                                      */
@@ -82,6 +85,20 @@ void AdaSchedulePage::viewWillAppear()
 {
     selDOW = 0;
     selSchedule = 0;
+    
+    if (GSchedulePage.changed) {
+        // Change our schedule item
+        GSchedulePage.changed = false;
+        
+        AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
+        AdaScheduleDay *day = rec->dow + selDOW;
+        AdaScheduleItem *item = day->setting + selItem;
+
+        item->hour = GSchedulePage.hour;
+        item->minute = GSchedulePage.minute;
+        item->heat = GSchedulePage.heat;
+        item->cool = GSchedulePage.cool;
+    }
 }
 
 /*  AdaSchedulePage::drawContents
@@ -132,7 +149,7 @@ void AdaSchedulePage::drawContents()
             GC.drawButton(RECT(100,89+38*ix,31,37),buffer,26,cornerLeft);
             FormatNumber(buffer,day->setting[ix].cool);
             GC.drawButton(RECT(132,89+38*ix,31,37),buffer,26);
-            FormatTime(buffer,day->setting[ix].hour,day->setting[0].minute);
+            FormatTime(buffer,day->setting[ix].hour,day->setting[ix].minute);
             GC.drawButton(RECT(164,89+38*ix,75,37),buffer,26,cornerRight);
         }
     }
@@ -199,6 +216,18 @@ void AdaSchedulePage::handleEvent(uint8_t ix)
         case AEVENT_FIRSTSPOT+1:
         case AEVENT_FIRSTSPOT+2:
         case AEVENT_FIRSTSPOT+3:
+            {
+                selItem = ix - AEVENT_FIRSTSPOT;
+                AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
+                AdaScheduleDay *day = rec->dow + selDOW;
+                AdaScheduleItem *item = day->setting + selItem;
+                
+                GSchedulePage.hour = item->hour;
+                GSchedulePage.minute = item->minute;
+                GSchedulePage.heat = item->heat;
+                GSchedulePage.cool = item->cool;
+                pushPage(&GSchedulePage);
+            }
             // Open time/temp editor
             break;
             

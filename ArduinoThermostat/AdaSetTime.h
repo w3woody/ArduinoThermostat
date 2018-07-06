@@ -10,13 +10,22 @@
 
 /************************************************************************/
 /*                                                                      */
+/*  Callback                                                            */
+/*                                                                      */
+/************************************************************************/
+
+typedef 
+
+/************************************************************************/
+/*                                                                      */
 /*  Home page                                                           */
 /*                                                                      */
 /************************************************************************/
 
 /*  AdaSetTime
  *
- *      Draws our thermostat and controls the basic settings.
+ *      Draws our basic time setting widget. This is deliberately designed
+ *  so it can be overridden.
  */
 
 class AdaSetTimePage: public AdaUIPage
@@ -26,15 +35,26 @@ class AdaSetTimePage: public AdaUIPage
                         
         virtual void    drawContents();     // Override for custom contents
 
-        virtual void    handleEvent(uint8_t ix);
+        virtual void    handleTap(TS_Point pt); // Allow other tap handling
         virtual void    viewWillAppear();
+        virtual void    viewWillDisappear();
+                
+        uint8_t         hour;               // pointer to result array [2 bytes]
+        uint8_t         minute;             // pointer to result array [2 bytes]
+        bool            changed;            // Indicate we changed.
+        
+    protected:
+        // Alternate constructor
+                        AdaSetTimePage(uint8_t offset, const AdaPage *p);
 
     private:
-        void            drawTime();
-        void            setTime();
+        uint8_t         offset;             // Offset of our display
+        uint8_t         curPos;
+        bool            isPM;
+        char            digit[4];
         
-        uint8_t         hour;
-        uint8_t         minute;
+        void            drawTime();
+        void            drawKeyboard();
 };
 
 #endif
