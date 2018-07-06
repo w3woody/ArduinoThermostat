@@ -9,14 +9,37 @@
  *  https://hackingden.com/category/user-interface-design/ 
  *  
  *  
- *  Copyright © 2018 by William Edward Woody
+ *  
+ *  ArduinoThermostat copyright © 2018 by William Edward Woody
+ *  
+ *  This program is free software: you can redistribute it and/or modify it
+ *  under the terms of the GNU General Public License as published by the Free 
+ *  Software Foundation, either version 3 of the License, or (at your option) 
+ *  any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+ *  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+ *  more details.
+ *  
+ *  You should have received a copy of the GNU General Public License with this
+ *  source distribution. If you did not, you may download a copy of the GNU
+ *  General Public License at http://www.gnu.org/licenses/
+ *  
+ *  If you wish for a commercial license which does not require the
+ *  distribution of this source code, or if you wish support with modification
+ *  of this code, please contact:
+ *  
+ *  William Edward Woody
+ *  12605 Raven Ridge Rd
+ *  Raleigh, NC 27614
+ *  United States of America
+ *  woody@alumni.caltech.edu
  *
- *  This program is free software: you can redistribute it and/or modify 
- *  it under the terms of the GNU General Public License as published by 
- *  the Free Software Foundation, either version 3 of the License, or 
- *  (at your option) any later version.
+ *
+ *  The original sources for this Arduino application may be downloaded from
+ *  https://github.com/w3woody/ArduinoThermostat
  */
-
 
 /*
  *  Much of our machinery has been moved elsewhere.
@@ -38,20 +61,9 @@
 #include "AdaThermostat.h"
 #include "AdaSchedule.h"
 
-
-// const char string_fan[] PROGMEM = "FAN";
-// const char string_schedule[] PROGMEM = "SCHEDULE";
-// const char string_settings[] PROGMEM = "SETTINGS";
-// const char string_title[] PROGMEM = "TITLE";
-// const char string_back[] PROGMEM = "\177BACK";
-// 
-// const char* const AHomeTitles[] PROGMEM = {
-//     string_fan, string_schedule, NULL, NULL, string_settings
-// };
-// 
-// const AdaPage AHome PROGMEM = {
-//     string_title, string_back, AHomeTitles
-// };
+/*
+ *  Our home page.
+ */
 
 AdaHomePage AHomePage;
 

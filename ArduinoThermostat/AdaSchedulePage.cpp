@@ -1,6 +1,37 @@
 /*  AdaSchedulePage.cpp
  *
  *      Defines the behavior of our home page, which displays the thermostat.
+ *  
+ *  
+ *  ArduinoThermostat copyright © 2018 by William Edward Woody
+ *  
+ *  This program is free software: you can redistribute it and/or modify it
+ *  under the terms of the GNU General Public License as published by the Free 
+ *  Software Foundation, either version 3 of the License, or (at your option) 
+ *  any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+ *  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+ *  more details.
+ *  
+ *  You should have received a copy of the GNU General Public License with this
+ *  source distribution. If you did not, you may download a copy of the GNU
+ *  General Public License at http://www.gnu.org/licenses/
+ *  
+ *  If you wish for a commercial license which does not require the
+ *  distribution of this source code, or if you wish support with modification
+ *  of this code, please contact:
+ *  
+ *  William Edward Woody
+ *  12605 Raven Ridge Rd
+ *  Raleigh, NC 27614
+ *  United States of America
+ *  woody@alumni.caltech.edu
+ *
+ *
+ *  The original sources for this Arduino application may be downloaded from
+ *  https://github.com/w3woody/ArduinoThermostat
  */
 
 #include "AdaUIScreen.h"
@@ -47,19 +78,26 @@ static AdaSetSchedulePage GSchedulePage;    // Page to set schedule
 
 /*  AdaSchedulePage::AdaSchedulePage
  *
- *      Build me
+ *      Build me. This is called when power on, so we make sure things go
+ *  to the default state. Note we don't alter the state afterwards, in case
+ *  the user bounces around screens.
  */
 
 AdaSchedulePage::AdaSchedulePage() : AdaUIPage(&ASchedule)
 {
-}
-
-void AdaSchedulePage::viewWillAppear()
-{
     selDOW = 0;
     selSchedule = 0;
     GPasteFlag = false;
-    
+}
+
+/*  AdaSchedulePage::viewWillAppear
+ *
+ *      This is called when this screen becomes visible. Regardless of how
+ *  we come visible, we want to 
+ */
+
+void AdaSchedulePage::viewWillAppear()
+{
     if (GSchedulePage.changed) {
         // Change our schedule item
         GSchedulePage.changed = false;
