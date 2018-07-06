@@ -97,19 +97,19 @@ AdaSchedulePickerPage::AdaSchedulePickerPage() : AdaUIPage(&ASchedule)
 
 void AdaSchedulePickerPage::redrawSelected()
 {
-    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 0 ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 0 ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(111, 75,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 1 ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 1 ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(209, 75,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 2 ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 2 ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(111,113,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 3 ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 3 ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(209,113,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 4 ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,GSchedule.getCurSchedule() == 4 ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(111,151,19,37));
 }
 

@@ -82,13 +82,13 @@ static void DrawHeatCool(uint16_t xoff, uint8_t temp)
 
 static void DrawFan(uint8_t fan)
 {
-    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_OFF) ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_OFF) ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(209,195,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_AUTO) ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_AUTO) ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT( 44,195,19,37));
 
-    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_ON) ? ADAUI_GREEN : ADAUI_BLACK);
+    GC.setTextColor(ADAUI_BLACK,(fan == ADAHVAC_FAN_ON) ? ADAUI_GREEN : ADAUI_DARKGRAY);
     GC.drawButton(RECT(128,195,19,37));
 }
 
@@ -121,6 +121,7 @@ void AdaTempPage::drawContents()
     DrawHeatCool(157,GThermostat.coolSetting);
     
     // Draw buttons
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
     GC.drawButton(RECT(117,88,40,37), (const __FlashStringHelper *)string_plus,28,KCornerUL | KCornerUR,KCenterAlign);
     GC.drawButton(RECT(117,126,40,37),(const __FlashStringHelper *)string_minus,28,KCornerLL | KCornerLR,KCenterAlign);
