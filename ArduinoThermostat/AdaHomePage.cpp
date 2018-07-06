@@ -257,7 +257,7 @@ void DrawRLEBitmap(const uint8_t *p, uint16_t color, int16_t x, int16_t y)
     GC.endWrite();
 }
 
-void DrawArc(int16_t x, int16_t y)
+uint16_t AirConColor()
 {
     uint16_t color;
     if (GThermostat.heat) {
@@ -269,8 +269,12 @@ void DrawArc(int16_t x, int16_t y)
     } else {
         color = 0x4208; // 0x4310;
     }
-    
-    DrawRLEBitmap(Arc_bitmap,color,x,y);
+    return color;
+}
+
+void DrawArc(int16_t x, int16_t y)
+{
+    DrawRLEBitmap(Arc_bitmap,AirConColor(),x,y);
 }
 
 void DrawMarker(uint8_t temp, uint16_t color, bool outside)
@@ -387,9 +391,6 @@ void AdaHomePage::drawContents()
     GC.drawButton(RECT(160,200,40,37),buffer,28,KCornerUL | KCornerLL,KCenterAlign);
     FormatNumber(buffer,GThermostat.coolSetting);
     GC.drawButton(RECT(201,200,40,37),buffer,28,KCornerUR | KCornerLR,KCenterAlign);
-    
-    // Draw the current temperature marker
-    DrawMarker(GThermostat.curTemperature,0xFFFF,false);
 
     // Draw the temperature
     FormatNumber(buffer,GThermostat.curTemperature);
@@ -407,6 +408,28 @@ void AdaHomePage::drawContents()
     } else {
         GC.drawButton(RECT(160,115,80,65),buffer,56,0,KCenterAlign);
     }
+    
+    // Draw the current temperature marker
+    DrawMarker(GThermostat.curTemperature,0xFFFF,false);
+    
+    // This does violate our UI guidelines, but we have this nice
+    // area in the upper left, and the color scheme makes this look
+    // different from a back button. And sometimes violating our UI
+    // guidelines is okay if what we're showing is sufficiently visually
+    // distinct users won't get confused.
+    //
+    // In this case, the icons we're displaying don't look like a back button
+    
+    // Draw the heat/cool/fan icons in the lower right. We use the h/c/f characters
+    // which are actually our icons. Part of this is for debugging purposes.
+    char flags[4];
+    char *ptr = flags;
+    if (GThermostat.heat) *ptr++ = 'h';
+    if (GThermostat.cool) *ptr++ = 'c';
+    if (GThermostat.fan)  *ptr++ = 'f';
+    *ptr = 0;
+    GC.setTextColor(AirConColor(),ADAUI_BLACK);
+    GC.drawButton(RECT(0,0,44,32),flags,24,0,KLeftAlign);
 }
 
 /*  AdaHomePage::handleEvent

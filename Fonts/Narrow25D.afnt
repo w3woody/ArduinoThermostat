@@ -1,5 +1,5 @@
 {
-  "export" : "file:\/\/\/Users\/woody\/Development\/ArduinoThermostat\/Fonts\/Narrow25D.fontsrc",
+  "export" : "file:\/\/\/Users\/woody\/Development\/ArduinoThermostat\/Fonts\/Narrow25D.fontsrc\/",
   "capHeight" : 18,
   "characters" : [
     {
@@ -539,12 +539,12 @@
       "height" : 0
     },
     {
-      "xOffset" : 0,
-      "xAdvance" : 5,
-      "bitmap" : "",
-      "yOffset" : 0,
-      "width" : 0,
-      "height" : 0
+      "xOffset" : -1,
+      "xAdvance" : 12,
+      "bitmap" : "  1   1     1 1   1   1   1 1  1  1   11111   1  1  1 1   1   1   1 1     1   1  ",
+      "yOffset" : 12,
+      "width" : 9,
+      "height" : 9
     },
     {
       "xOffset" : 0,
@@ -564,11 +564,11 @@
     },
     {
       "xOffset" : 0,
-      "xAdvance" : 5,
-      "bitmap" : "",
-      "yOffset" : 0,
-      "width" : 0,
-      "height" : 0
+      "xAdvance" : 12,
+      "bitmap" : "     11         111         111         111          11 111 11111  1111111111  11111 111 11          111         111         111         11     ",
+      "yOffset" : 13,
+      "width" : 12,
+      "height" : 12
     },
     {
       "xOffset" : 0,
@@ -579,12 +579,12 @@
       "height" : 0
     },
     {
-      "xOffset" : 0,
-      "xAdvance" : 5,
-      "bitmap" : "",
-      "yOffset" : 0,
-      "width" : 0,
-      "height" : 0
+      "xOffset" : -1,
+      "xAdvance" : 12,
+      "bitmap" : "  1  1  1 1  1  1 1  1  1  1  1  1  1  1  1   1  1  1   1  1  1  1  1  1  1  1  1 1  1  1 1  1  1  ",
+      "yOffset" : 13,
+      "width" : 9,
+      "height" : 11
     },
     {
       "xOffset" : 0,
