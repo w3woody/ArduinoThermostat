@@ -257,14 +257,14 @@ void DrawRLEBitmap(const uint8_t *p, uint16_t color, int16_t x, int16_t y)
     GC.endWrite();
 }
 
-void DrawArc(uint8_t lastState, int16_t x, int16_t y)
+void DrawArc(int16_t x, int16_t y)
 {
     uint16_t color;
-    if (lastState & ADAHVAC_HEAT) {
+    if (GThermostat.heat) {
         color = 0xF800;
-    } else if (lastState & ADAHVAC_COOL) {
+    } else if (GThermostat.cool) {
         color = 0x001F;
-    } else if (lastState & ADAHVAC_FAN) {
+    } else if (GThermostat.fan) {
         color = ADAUI_YELLOW;
     } else {
         color = 0x4208; // 0x4310;
@@ -379,7 +379,7 @@ void AdaHomePage::drawContents()
     DrawTemperatureMarker(lastCool,0x001F);       // blue
     
     // Draw temperature arc
-    DrawArc(GThermostat.unitState,120,70);
+    DrawArc(120,70);
 
     // Draw temperature adjustment
     GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
@@ -455,12 +455,15 @@ void AdaHomePage::periodicEvents()
      */
     
     if ((GThermostat.heatSetting != lastHeat) || (GThermostat.coolSetting != lastCool) ||
-        (GThermostat.curTemperature != lastTemp) || (GThermostat.unitState != lastState)) {
+        (GThermostat.curTemperature != lastTemp) || (GThermostat.heat != lastHeatOn) || 
+        (GThermostat.cool != lastCoolOn) || (GThermostat.fan != lastFanOn)) {
         
         lastHeat = GThermostat.heatSetting;
         lastCool = GThermostat.coolSetting;
         lastTemp = GThermostat.curTemperature;
-        lastState = GThermostat.unitState;
+        lastHeatOn = GThermostat.heat;
+        lastCoolOn = GThermostat.cool;
+        lastFanOn = GThermostat.fan;
         
         invalidateContents();
     }

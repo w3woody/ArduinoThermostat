@@ -72,23 +72,32 @@
 
 #define TEMPWINDOW      1               /* 1 degree window */
 
+/*  FANRUNWINDOW
+ *
+ *      This is the number of seconds past the time the heater or the
+ *  air conditioner turned off before we wind down the fan. In practice the
+ *  HVAC system's heating elements or cooling elements remain hot or cold
+ *  after the system is turned off--and we want to continue blowing across
+ *  them so they don't overheat, and so we get the residual heat or cooling
+ *  into the room where it belongs.
+ */
+
+#define FANRUNWINDOW    60              /* Run the fan for 60 seconds */
+
 /************************************************************************/
 /*                                                                      */
-/*  Global Variables                                                    */
+/*  Constants                                                           */
 /*                                                                      */
 /************************************************************************/
+
+/*
+ *  Legal values of GThermostat.fanSetting. Notice that field also doubles
+ *  as a setting to turn the entire unit off.
+ */
 
 #define ADAHVAC_OFF         0           /* HVAC/fan always off */
 #define ADAHVAC_FAN_AUTO    1           /* Fan only runs when HVAC on */
 #define ADAHVAC_FAN_ON      2           /* Fan is always running */
-
-/*
- *  unit state bits
- */
-
-#define ADAHVAC_FAN     0x01            /* Set to true if fan running */
-#define ADAHVAC_COOL    0x02            /* Set to true if cooling */
-#define ADAHVAC_HEAT    0x04            /* Set to true if heating */
 
 /************************************************************************/
 /*                                                                      */
@@ -103,15 +112,19 @@ class AdaThermostat
 
         void            periodicUpdate();
         
-        uint8_t         heatSetting;
-        uint8_t         coolSetting;
-        uint8_t         fanSetting;
-        uint8_t         curTemperature;
-        uint8_t         unitState;
-        uint8_t         lastSet;
+        uint8_t         heatSetting;        /* Target heat to temperature */
+        uint8_t         coolSetting;        /* Target cool to temperature */
+        uint8_t         fanSetting;         /* ADAVAC_OFF/AUTO/ON */
+        uint8_t         curTemperature;     /* Current interior temperature */
+        uint8_t         lastSet;            /* Last schedule used or 0xFF */
+        
+        bool            heat;               /* True if heater runs */
+        bool            cool;               /* True if aircon runs */
+        bool            fan;                /* True if fan runs */
     
     private:
         uint32_t        delay;
+        uint32_t        fanrun;
 };
 
 /************************************************************************/

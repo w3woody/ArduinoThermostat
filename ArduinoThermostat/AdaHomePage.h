@@ -68,7 +68,10 @@ class AdaHomePage: public AdaUIPage
         uint8_t         lastTemp;           // Last state we draw
         uint8_t         lastHeat;
         uint8_t         lastCool;
-        uint8_t         lastState;
+        bool            lastHeatOn;
+        bool            lastCoolOn;
+        bool            lastFanOn;
+        
 };
 
 

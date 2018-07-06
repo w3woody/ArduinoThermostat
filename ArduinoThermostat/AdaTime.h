@@ -64,8 +64,9 @@ struct AdaTimeRecord
 
 extern void AdaTimeInitialize();
 
-extern uint32_t AdaGetTime();
-extern void AdaSetTime(uint32_t t);
+extern void AdaSetTime(uint32_t t);     // Time (seconds elapsed since 1/1/2017)
+extern uint32_t AdaGetTime();           // Time (seconds elapsed since 1/1/2017)
+extern uint32_t AdaGetElapsedTime();    // Time (seconds elapsed since power on)
 
 /*
  *  Day/date conversion

@@ -49,7 +49,8 @@
 /************************************************************************/
 
 static uint8_t GIncr;           // Increment management
-static uint32_t GTime;          // # of seconds since 1970
+static uint32_t GTime;          // # of seconds since 1/1/2017
+static uint32_t GElapsed;       // # of seconds since power on
 
 /************************************************************************/
 /*                                                                      */
@@ -62,6 +63,7 @@ ISR(TIMER2_COMPA_vect)
     if (++GIncr >= 125) {
         GIncr = 0;
         ++GTime;
+        ++GElapsed;
     }
 }
 
@@ -139,6 +141,20 @@ uint32_t AdaGetTime()
     cli();
     
     ret = GTime;
+    
+    SREG = oldSREG;
+    
+    return ret;
+}
+
+uint32_t AdaGetElapsedTime()
+{
+    unsigned long ret;
+    
+    uint8_t oldSREG = SREG;
+    cli();
+    
+    ret = GElapsed;
     
     SREG = oldSREG;
     

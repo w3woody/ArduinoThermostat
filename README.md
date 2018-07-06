@@ -4,6 +4,10 @@ This is a demo of UI design on an Arduino with a simple programmable thermostat.
 
 This is the source code that accommodates a series of articles on The Hacking Den on [User Interface Design.](https://hackingden.com/category/user-interface-design/) Each branch will correspond to an article and can be used to see how we design and build our user interface.
 
+# Controlling hardware.
+
+This is a demo, but it does contain some logic for actually controlling an HVAC system. [We provide some notes on how you may wish to do this.](hardware.md)
+
 # License
 
 Copyright © 2018 by William Edward Woody
