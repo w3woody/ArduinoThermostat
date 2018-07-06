@@ -6,9 +6,28 @@
  */
 
 #include <stdint.h>
+#include <EEPROM.h>
 #include "AdaSchedule.h"
 #include "AdaThermostat.h"
 #include "AdaTime.h"
+
+/*
+ *  Note that we store our schedule in EEPROM. This means we need for
+ *  our five separate schedules around 560 bytes of EEPROM. The Arduino
+ *  Metro holds 1K so we're good, but other Arduinos only have 512 bytes,
+ *  which is no bueno. You would have to make adjustments in the code
+ *  here (and elsewhere) to make this fit.
+ */
+
+/************************************************************************/
+/*                                                                      */
+/*  Magic Value                                                         */
+/*                                                                      */
+/************************************************************************/
+
+#define EEPROM_MAGIC        0x3C        // If we don't see this, reset.
+#define EEPROM_MAGICADDR    (35 * sizeof(AdaScheduleDay))
+#define EEPROM_SCHEDULE     (EEPROM_MAGICADDR + 1)
 
 /************************************************************************/
 /*                                                                      */
@@ -18,17 +37,6 @@
 
 AdaSchedule GSchedule;
 
-const char GStringSpring[] PROGMEM = "SPRING";
-const char GStringSummer[] PROGMEM = "SUMMER";
-const char GStringFall[]   PROGMEM = "FALL";
-const char GStringWinter[] PROGMEM = "WINTER";
-const char GStringSaver[]  PROGMEM = "SAVER";
-
-const char* const GScheduleName[] PROGMEM = {
-   GStringSpring, GStringSummer, GStringFall, GStringWinter, GStringSaver
-};
-
-
 /************************************************************************/
 /*                                                                      */
 /*  Class Declaration                                                   */
@@ -37,32 +45,172 @@ const char* const GScheduleName[] PROGMEM = {
 
 /*  AdaSchedule::AdaSchedule
  *
- *      Set up our thermostat
+ *      Set up our thermostat. Note this gets called on power-up, so we
+ *  do our initialization, which sets up the EEPROM and sets the current
+ *  temperature according to our schedule.
  */
 
 AdaSchedule::AdaSchedule()
 {
-    // ### TODO: Store in NVRAM. For now, slam values
-    for (uint8_t i = 0; i < 4; ++i) {
-        for (uint8_t dow = 0; dow < 7; ++dow) {
-            AdaScheduleDay *d = schedules[i].dow + dow;
-            d->setting[0] = (AdaScheduleItem){  4,  0, 68, 78 };
-            d->setting[1] = (AdaScheduleItem){  8, 30, 65, 82 };
-            d->setting[2] = (AdaScheduleItem){ 16, 30, 68, 78 };
-            d->setting[3] = (AdaScheduleItem){ 22,  0, 65, 76 };
+    if (EEPROM_MAGIC != EEPROM.read(EEPROM_MAGICADDR)) {
+        AdaScheduleDay day;
+        day.setting[0] = (AdaScheduleItem){  4,  0, 68, 78 };
+        day.setting[1] = (AdaScheduleItem){  8, 30, 65, 82 };
+        day.setting[2] = (AdaScheduleItem){ 16, 30, 68, 78 };
+        day.setting[3] = (AdaScheduleItem){ 22,  0, 65, 76 };
+
+        for (uint8_t i = 0; i < 5; ++i) {
+            for (uint8_t dow = 0; dow < 7; ++dow) {
+                setSchedule(i,dow,day);
+            }
         }
-    }
-    for (uint8_t dow = 0; dow < 7; ++dow) {
-        AdaScheduleDay *d = schedules[4].dow + dow;
-        d->setting[0] = (AdaScheduleItem){  4,  0, 62, 85 };
-        d->setting[1] = (AdaScheduleItem){  8, 30, 62, 85 };
-        d->setting[2] = (AdaScheduleItem){ 16, 30, 62, 85 };
-        d->setting[3] = (AdaScheduleItem){ 22,  0, 62, 85 };
+
+        // And set to the energy saver
+        setCurSchedule(4);  /* Energy saver default */
+
+        // Do this last in case we crash above.
+        EEPROM.update(EEPROM_MAGICADDR,EEPROM_MAGIC);
+    } else {
+        /*
+         *  This will effectively set the current temperature according
+         *  to our schedule
+         */
+        
+        setCurSchedule(getCurSchedule());
     }
     
-    curSchedule = 1;        /* Summer default */
-    lastTripped = 0xFF;
+    /*
+     *  Reset our check time so we spin our check
+     */
+
     lastCheck = 0;
+}
+
+static uint16_t EEPROMAddr(uint8_t schedule, uint8_t dow)
+{
+    return (schedule * 7 + dow) * sizeof(AdaScheduleDay);
+}
+
+AdaScheduleDay AdaSchedule::getSchedule(uint8_t schedule, uint8_t dow)
+{
+    AdaScheduleDay ret;
+    EEPROM.get(EEPROMAddr(schedule,dow),ret);
+    return ret;
+}
+
+void AdaSchedule::setSchedule(uint8_t schedule, uint8_t dow, const AdaScheduleDay &item)
+{
+    EEPROM.put(EEPROMAddr(schedule,dow),item);
+}
+
+uint8_t AdaSchedule::getCurSchedule()
+{
+    return EEPROM.read(EEPROM_SCHEDULE);
+}
+
+void AdaSchedule::setCurSchedule(uint8_t value)
+{
+    /*
+     *  Update the schedule, and show which schedule we have that is
+     *  now controlling--even if it's completely blank.
+     */
+    
+    EEPROM.update(EEPROM_SCHEDULE,value);
+    GThermostat.lastSet = value;
+    
+    /*
+     *  Now scan the schedule to find our temperatures. We scan the entire
+     *  week to figure out the entry that would have set this temperature. If
+     *  none, we don't do anything.
+     */
+    
+    AdaTimeRecord tr = AdaSecToTime(AdaGetTime());
+    uint8_t foundDOW = 0xFF;                // Found matching item
+    uint8_t foundItem = 0xFF;
+    uint8_t lastDOW = 0xFF;                 // Last found item
+    uint8_t lastItem = 0xFF;
+    bool found = false;
+    
+    for (uint8_t dow = 0; dow < 7; ++dow) {
+        AdaScheduleDay d = getSchedule(value,tr.dow);
+        for (uint8_t i = 0; i < 4; ++i, ++i) {
+            uint8_t h = d.setting[i].hour;
+            uint8_t m = d.setting[i].minute;
+            if (h == 0xFF) continue;        // Skip if cleared.
+            
+            /*
+             *  Determine if the date/time is past our current date/time.
+             *  This means the last found entry is the entry that is the
+             *  one we want.
+             *
+             *  We found our entry when the entry date/time is greater than
+             *  our current date/time--and that flags the entry before this
+             *  one is the one we want.
+             */
+            
+            if (!found) {
+                if (tr.dow < dow) found = true;
+                else if (tr.dow == dow) {
+                    if (tr.hour < h) found = true;
+                    else if (tr.hour == h) {
+                        if (tr.min < m) found = true;
+                    }
+                }
+                
+                if (found) {
+                    /*
+                     *  If the time is greater than the current time, then
+                     *  the last entry is the entry we want
+                     */
+                    
+                    foundDOW = lastDOW;
+                    foundItem = lastItem;
+                }
+            }
+            
+            /*
+             *  Now note the last dow and item we actually found a setting.
+             */
+            
+            lastDOW = dow;
+            lastItem = i;
+        }
+    }
+    
+    /*
+     *  Determine if we ever had an entry. If not, bail
+     */
+    
+    if (lastDOW == 0xFF) {
+        lastTrippedDOW = 0xFF;
+        lastTrippedIndex = 0xFF;
+        return;
+    }
+    
+    /*
+     *  Now get the day and item of our schedule
+     */
+    
+    if (foundDOW == 0xFF) {
+        /*
+         *  This is the case where the controlling item is the last item in
+         *  our schedule.
+         */
+        
+        foundDOW = lastDOW;
+        foundItem = lastItem;
+    }
+    
+    /*
+     *  Finally! Set our thermostat.
+     */
+
+    AdaScheduleDay d = getSchedule(value,foundDOW);
+
+    GThermostat.heatSetting = d.setting[foundItem].heat;
+    GThermostat.coolSetting = d.setting[foundItem].cool;
+    lastTrippedIndex = foundItem;
+    lastTrippedDOW = foundDOW;
 }
 
 /*  AdaSchedule::periodicUpdate
@@ -80,8 +228,7 @@ void AdaSchedule::periodicUpdate()
     lastCheck = time;
     
     AdaTimeRecord tr = AdaSecToTime(time);
-    AdaScheduleRecord *r = schedules + curSchedule;
-    AdaScheduleDay *d = r->dow + tr.dow;
+    AdaScheduleDay d = getSchedule(getCurSchedule(),tr.dow);
     
     /*
      *  This finds the item in the day. The way we work is to find the
@@ -96,14 +243,16 @@ void AdaSchedule::periodicUpdate()
      */
     
     for (uint8_t i = 0; i < 4; ++i) {
-        uint8_t tripItem = i + tr.dow * 4;
-        if (tripItem == lastTripped) continue;
+        if ((tr.dow == lastTrippedDOW) && (i == lastTrippedIndex)) continue;
         
-        if ((d->setting[i].hour == tr.hour) && (d->setting[i].minute == tr.min)) {
-            lastTripped = tripItem;
-            GThermostat.heatSetting = d->setting[i].heat;
-            GThermostat.coolSetting = d->setting[i].cool;
-            GThermostat.lastSet = curSchedule;
+        if ((d.setting[i].hour == tr.hour) && (d.setting[i].minute == tr.min)) {
+            lastTrippedIndex = i;
+            lastTrippedDOW = tr.dow;
+            
+            GThermostat.heatSetting = d.setting[i].heat;
+            GThermostat.coolSetting = d.setting[i].cool;
+            GThermostat.lastSet = getCurSchedule();
+            break;
         }
     }
 }

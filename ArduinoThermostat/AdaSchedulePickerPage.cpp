@@ -6,28 +6,19 @@
 #include "AdaUIScreen.h"
 #include "AdaSchedulePickerPage.h"
 #include "AdaSchedulePage.h"
-#include "Narrow25.h"
-#include "Narrow75D.h"
+#include "Narrow25D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
 #include "AdaSchedule.h"
 #include "AdaUtils.h"
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
+#include "AdaProgmem.h"
+#include "AdaStrings.h"
 
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
 /*                                                                      */
 /************************************************************************/
-
-static const char string_title[] PROGMEM = "SCHEDULE";
-static const char string_back[] PROGMEM = "\177BACK";
-static const char string_edit[] PROGMEM = "EDIT";
 
 static const AdaUIRect AScheduleRects[] PROGMEM = {
     { 131, 75, 77,37 },
@@ -42,7 +33,7 @@ static const char* const AScheduleTitles[] PROGMEM = {
 };
 
 static const AdaPage ASchedule PROGMEM = {
-    string_title, string_back, AScheduleTitles, AScheduleRects, 5
+    string_schedule, string_back, AScheduleTitles, AScheduleRects, 5
 };
 
 /************************************************************************/
@@ -52,23 +43,6 @@ static const AdaPage ASchedule PROGMEM = {
 /************************************************************************/
 
 AdaSchedulePage GSchedulePage;
-
-/************************************************************************/
-/*                                                                      */
-/*  Support                                                             */
-/*                                                                      */
-/************************************************************************/
-
-/*
- *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
- *  space if we are missing some definitions
- */
-
-#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
-    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
-#else
-    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
-#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -121,20 +95,20 @@ void AdaSchedulePickerPage::drawContents()
      */
     
     GC.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
-    GC.setFont(&Narrow25);
+
     GC.drawButton(RECT(99, 75,11,37),KCornerUL);
     GC.drawButton(RECT(99,113,11,37));
     GC.drawButton(RECT(99,151,11,37),KCornerLL);
     
     /*
-     *  Draw the buttons themselves
+     *  Draw the buttons themselves ### Long name for energy saver page?
      */
     
-    GC.drawButton(RECT(131, 75, 77,37),(const __FlashStringHelper *)GStringSpring,28);
-    GC.drawButton(RECT(229, 75, 77,37),(const __FlashStringHelper *)GStringSummer,28,KCornerUR);
-    GC.drawButton(RECT(131,113, 77,37),(const __FlashStringHelper *)GStringFall,28);
-    GC.drawButton(RECT(229,113, 77,37),(const __FlashStringHelper *)GStringWinter,28);
-    GC.drawButton(RECT(131,151,175,37),(const __FlashStringHelper *)GStringSaver,28,KCornerLR);
+    GC.drawButton(RECT(131, 75, 77,37),(const __FlashStringHelper *)string_spring,28);
+    GC.drawButton(RECT(229, 75, 77,37),(const __FlashStringHelper *)string_summer,28,KCornerUR);
+    GC.drawButton(RECT(131,113, 77,37),(const __FlashStringHelper *)string_fall,28);
+    GC.drawButton(RECT(229,113, 77,37),(const __FlashStringHelper *)string_winter,28);
+    GC.drawButton(RECT(131,151,175,37),(const __FlashStringHelper *)string_saver,28,KCornerLR);
     
     /*
      *  Draw the seelcted schedule item

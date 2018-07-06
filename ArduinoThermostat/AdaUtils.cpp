@@ -5,25 +5,8 @@
 
 #include "AdaUtils.h"
 #include "AdaTime.h"
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
-
-#ifndef pgm_read_byte
-    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-#endif
-
-/************************************************************************/
-/*                                                                      */
-/*  Strings                                                             */
-/*                                                                      */
-/************************************************************************/
-
-const char GStringMonth[] PROGMEM = "JAN\0FEB\0MAR\0APR\0MAY\0JUN\0JUL\0AUG\0SEP\0OCT\0NOV\0DEC";
-const char GStringDOW[]   PROGMEM = "SUN\0MON\0TUE\0WED\0THU\0FRI\0SAT";
+#include "AdaProgmem.h"
+#include "AdaStrings.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -102,18 +85,19 @@ void FormatTime(char *ptr, uint8_t hour, uint8_t minute)
  *  Utility; append char from progmem
  */
 
-static char *AppendChar(char *ptr, char *ref)
+static char *AppendChar(char *ptr, const __FlashStringHelper *ref)
 {
     char ch;
+    const char *r = (const char *)ref;
     
-    while (0 != (ch = (char)pgm_read_byte(ref++))) *ptr++ = ch;
+    while (0 != (ch = (char)pgm_read_byte(r++))) *ptr++ = ch;
     *ptr++ = ' ';
     return ptr;
 }
 
 static char *FormatDay(char *ptr, uint8_t dow)
 {
-    return AppendChar(ptr,GStringDOW + dow * 4);
+    return AppendChar(ptr,GDOWString(dow));
 }
 
 void FormatDayTime(char *ptr, uint32_t time)
@@ -135,7 +119,7 @@ void FormatDate(char *ptr, uint32_t time)
     
     ptr = FormatDay(ptr,tr.dow);
     
-    ptr = AppendChar(ptr,GStringMonth + (tr.month - 1) * 4);
+    ptr = AppendChar(ptr,GMonthString(tr.month - 1));
     
     if (tr.day >= 10) {
         *ptr++ = '0' + tr.day/10;

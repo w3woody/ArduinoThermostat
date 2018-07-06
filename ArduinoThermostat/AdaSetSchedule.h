@@ -33,7 +33,7 @@ class AdaSetSchedulePage: public AdaSetTimePage
                         AdaSetSchedulePage();
                         
         virtual void    drawContents();     // Override for custom contents
-
+        virtual void    handleEvent(uint8_t ix);
         uint8_t         heat;
         uint8_t         cool;
 

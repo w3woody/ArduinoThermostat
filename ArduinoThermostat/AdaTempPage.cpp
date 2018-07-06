@@ -5,20 +5,18 @@
 
 #include "AdaUIScreen.h"
 #include "AdaTempPage.h"
-#include "Narrow25.h"
+#include "Narrow25D.h"
 #include "Narrow75D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
 #include "AdaUtils.h"
+#include "AdaStrings.h"
 
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
 /*                                                                      */
 /************************************************************************/
-
-static const char string_title[] PROGMEM = "TEMPERATURE SETTINGS";
-static const char string_back[] PROGMEM = "\177DONE";
 
 static const AdaUIRect ATempRects[] PROGMEM = {
     { 117,  88,  40,  37 },       // Heat ++
@@ -31,7 +29,7 @@ static const AdaUIRect ATempRects[] PROGMEM = {
 };
 
 static const AdaPage ATemp PROGMEM = {
-    string_title, string_back, NULL, ATempRects, 7
+    string_settings, string_back, NULL, ATempRects, 7
 };
 
 /************************************************************************/
@@ -92,19 +90,19 @@ void AdaTempPage::drawContents()
     DrawHeatCool(157,GThermostat.coolSetting);
     
     // Draw buttons
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
-    GC.drawButton(RECT(117,88,40,37), F("+"),28,KCornerUL | KCornerUR,KCenterAlign);
-    GC.drawButton(RECT(117,126,40,37),F("-"),28,KCornerLL | KCornerLR,KCenterAlign);
+    GC.drawButton(RECT(117,88,40,37), (const __FlashStringHelper *)string_plus,28,KCornerUL | KCornerUR,KCenterAlign);
+    GC.drawButton(RECT(117,126,40,37),(const __FlashStringHelper *)string_minus,28,KCornerLL | KCornerLR,KCenterAlign);
 
-    GC.drawButton(RECT(231,88,40,37), F("+"),28,KCornerUL | KCornerUR,KCenterAlign);
-    GC.drawButton(RECT(231,126,40,37),F("-"),28,KCornerLL | KCornerLR,KCenterAlign);
+    GC.drawButton(RECT(231,88,40,37), (const __FlashStringHelper *)string_plus,28,KCornerUL | KCornerUR,KCenterAlign);
+    GC.drawButton(RECT(231,126,40,37),(const __FlashStringHelper *)string_minus,28,KCornerLL | KCornerLR,KCenterAlign);
     
     // Draw state buttons
     GC.drawButton(RECT( 32,195,11,37),KCornerUL | KCornerLL);
-    GC.drawButton(RECT( 64,195,63,37),F("AUTO"),28);
-    GC.drawButton(RECT(148,195,60,37),F("ON"),28);
-    GC.drawButton(RECT(229,195,60,37),F("OFF"),28,KCornerUR | KCornerLR);
+    GC.drawButton(RECT( 64,195,63,37),(const __FlashStringHelper *)string_auto,28);
+    GC.drawButton(RECT(148,195,60,37),(const __FlashStringHelper *)string_on,28);
+    GC.drawButton(RECT(229,195,60,37),(const __FlashStringHelper *)string_off,28,KCornerUR | KCornerLR);
     
     DrawFan(GThermostat.fanSetting);
 }

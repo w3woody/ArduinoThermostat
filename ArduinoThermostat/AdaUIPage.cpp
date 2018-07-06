@@ -7,13 +7,8 @@
  */
 
 #include "AdaUIPage.h"
-#include "Narrow25.h"
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
+#include "Narrow25D.h"
+#include "AdaProgmem.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -27,31 +22,6 @@
 #define NUMBUTTONS          5       // Buttons on left
 #define TOPBARBOTTOM        50      // Bottom of top bar area.
 #define LEFTBUTTONHEIGHT    38      // (240-50)/5 = 38
-
-/************************************************************************/
-/*                                                                      */
-/*  Program Memory Support                                              */
-/*                                                                      */
-/************************************************************************/
-
-/*
- *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
- *  space if we are missing some definitions
- */
-
-#ifndef pgm_read_byte
-    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-#endif
-
-#ifndef pgm_read_word
-    #define pgm_read_word(addr) (*(const unsigned short *)(addr))
-#endif
-
-#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
-    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
-#else
-    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
-#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -132,6 +102,8 @@ void AdaUIPage::processPageEvents()
      */
     
     if (invalidFlags) {
+        GC.setFont(&Narrow25D);                     // Our guarantee about font
+
         if (invalidFlags & INVALIDATE_DRAW) {
             draw();
         } else if (invalidFlags & INVALIDATE_CONTENT) {
@@ -141,6 +113,7 @@ void AdaUIPage::processPageEvents()
             } else {
                 GC.fillRect(95,40,225,200,0x0000);      // Fill with black
             }
+            
             drawContents();
         }
         invalidFlags = 0;
@@ -254,11 +227,12 @@ void AdaUIPage::processEvents()
 void AdaUIPage::draw()
 {
     /*
-     *  Clear and set up
+     *  Clear and set up. Note that this supports our guarantee that we are
+     *  setting the font to Narrow25D for all our pages, so they don't have
+     *  to unless they're changing the font.
      */
     
     GC.fillScreen(ADAUI_BLACK);
-    GC.setFont(&Narrow25);
     
     /*
      *  If we have a built-in title, draw that. Otherwise, call drawTitle
@@ -267,6 +241,8 @@ void AdaUIPage::draw()
     GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
     const char *title = (const char *)pgm_read_pointer(&page->title);
     if (title == NULL) {
+        // We guarantee the correct font and color set for our title.
+        GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
         drawTitle();
     } else {
         GC.drawButton(RECT(160,0,160,32),(const __FlashStringHelper *)title,24);
@@ -276,6 +252,7 @@ void AdaUIPage::draw()
      *  Draw back button
      */
     
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_BLUE,ADAUI_BLACK);
     title = (const char *)pgm_read_pointer(&page->back);
     if (title != NULL) {

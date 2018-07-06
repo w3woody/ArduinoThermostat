@@ -5,27 +5,11 @@
 
 #include "AdaUIScreen.h"
 #include "AdaSetTime.h"
-#include "Narrow25.h"
-#include "Narrow75D.h"
+#include "Narrow25D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
 #include "AdaUtils.h"
-
-/************************************************************************/
-/*                                                                      */
-/*  In memory                                                           */
-/*                                                                      */
-/************************************************************************/
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
-
-#ifndef pgm_read_byte
-    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-#endif
+#include "AdaProgmem.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -107,7 +91,7 @@ void AdaSetTimePage::drawTime()
     buffer[7] = 'M';
     buffer[8] = 0;
     
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
     GC.drawButton(RECT(104+offset,50,113,37),buffer,28,0,KCenterAlign);
 }
@@ -123,7 +107,7 @@ void AdaSetTimePage::drawKeyboard()
      *  Draw keyboard
      */
     
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     for (uint8_t i = 0; i < 12; ++i) {
         uint8_t x = i % 3;
         uint8_t y = i / 3;

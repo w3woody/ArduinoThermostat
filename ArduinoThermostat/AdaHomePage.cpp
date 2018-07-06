@@ -5,57 +5,24 @@
 
 #include "AdaUIScreen.h"
 #include "AdaHomePage.h"
-#include "Narrow25.h"
+#include "Narrow25D.h"
 #include "Narrow75D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
 #include "AdaSettingsPage.h"
 #include "AdaUtils.h"
 #include "AdaSchedule.h"
+#include "AdaProgmem.h"
+#include "AdaStrings.h"
 
 #include "AdaTempPage.h"
 #include "AdaSchedulePickerPage.h"
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
-
-/************************************************************************/
-/*                                                                      */
-/*  Support                                                             */
-/*                                                                      */
-/************************************************************************/
-
-/*
- *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
- *  space if we are missing some definitions
- */
-
-#ifndef pgm_read_byte
-    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-#endif
-
-#ifndef pgm_read_word
-    #define pgm_read_word(addr) (*(const unsigned short *)(addr))
-#endif
-
-#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
-    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
-#else
-    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
-#endif
 
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
 /*                                                                      */
 /************************************************************************/
-
-static const char string_fan[] PROGMEM = "FAN";
-static const char string_schedule[] PROGMEM = "SCHEDULE";
-static const char string_settings[] PROGMEM = "SETTINGS";
 
 static const AdaUIRect AHomeRects[] PROGMEM = {
     { 160, 200, 40, 37 },       // Heat button
@@ -358,9 +325,8 @@ void AdaHomePage::drawTitle()
 {
     char buffer[16];
 
+    // Note: our font and color was set in the caller
     FormatDayTime(buffer,AdaGetTime());
-    GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    GC.setFont(&Narrow25);
     GC.drawButton(RECT(160,0,160,32),buffer,24);
 }
 
@@ -378,7 +344,6 @@ void AdaHomePage::drawContents()
      */
     
     GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
-    GC.setFont(&Narrow25);
     drawTemperatureMarker(lastHeat,0xF800);       // red
     drawTemperatureMarker(lastCool,0x001F);       // blue
     
@@ -386,7 +351,6 @@ void AdaHomePage::drawContents()
     DrawArc(GThermostat.unitState,120,70);
 
     // Draw temperature adjustment
-    GC.setFont(&Narrow25);
     GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
     FormatNumber(buffer,GThermostat.heatSetting);
     GC.drawButton(RECT(160,200,40,37),buffer,28,KCornerUL | KCornerLL,KCenterAlign);
@@ -405,11 +369,10 @@ void AdaHomePage::drawContents()
     if (GThermostat.lastSet != 0xFF) {
         GC.drawButton(RECT(160,100,80,65),buffer,56,0,KCenterAlign);
 
-        const __FlashStringHelper *str;
-        str = (const __FlashStringHelper *)pgm_read_pointer(GScheduleName+GThermostat.lastSet);
         GC.setTextColor(ADAUI_PURPLE,ADAUI_BLACK);
-        GC.setFont(&Narrow25);
-        GC.drawButton(RECT(160,160,80,30),str,26,0,KCenterAlign);
+        
+        GC.setFont(&Narrow25D);
+        GC.drawButton(RECT(160,160,80,30),GScheduleString(GThermostat.lastSet),26,0,KCenterAlign);
     } else {
         GC.drawButton(RECT(160,115,80,65),buffer,56,0,KCenterAlign);
     }
@@ -448,6 +411,9 @@ void AdaHomePage::periodicEvents()
     uint8_t t = AdaGetTime() / 60;
     if (drewTime != t) {
         drewTime = t;
+
+        GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
+        GC.setFont(&Narrow25D);
         drawTitle();
     }
 

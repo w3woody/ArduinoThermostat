@@ -5,29 +5,18 @@
 
 #include "AdaUIScreen.h"
 #include "AdaSetDate.h"
-#include "Narrow25.h"
-#include "Narrow75D.h"
+#include "Narrow25D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
 #include "AdaUtils.h"
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
+#include "AdaProgmem.h"
+#include "AdaStrings.h"
 
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
 /*                                                                      */
 /************************************************************************/
-
-static const char string_title[] PROGMEM = "SET DATE";
-static const char string_back[] PROGMEM = "\177DONE";
-
-static const char string_time[] PROGMEM = "TIME";
-static const char string_date[] PROGMEM = "DATE";
 
 static const AdaUIRect ADateRects[] PROGMEM = {
     { 10,100,40,37 },       // -Month
@@ -37,25 +26,8 @@ static const AdaUIRect ADateRects[] PROGMEM = {
 };
 
 static const AdaPage ADate PROGMEM = {
-    string_title, string_back, NULL, ADateRects, 4
+    string_set_date, string_back, NULL, ADateRects, 4
 };
-
-/************************************************************************/
-/*                                                                      */
-/*  Support                                                             */
-/*                                                                      */
-/************************************************************************/
-
-/*
- *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
- *  space if we are missing some definitions
- */
-
-#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
-    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
-#else
-    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
-#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -87,9 +59,9 @@ void AdaSetDatePage::viewWillAppear()
 
 void AdaSetDatePage::drawMonth()
 {
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    GC.drawButton(RECT( 10,62,81,37),(const __FlashStringHelper *)(GStringMonth + 4 * (month-1)),28,0,KCenterAlign);
+    GC.drawButton(RECT( 10,62,81,37),GMonthString(month-1),28,0,KCenterAlign);
 }
 
 void AdaSetDatePage::drawYear()
@@ -97,7 +69,7 @@ void AdaSetDatePage::drawYear()
     char buffer[8];
     
     FormatNumber(buffer,year);
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
     GC.drawButton(RECT( 10,137,81,37),buffer,28,0,KCenterAlign);
 }
@@ -127,12 +99,12 @@ void AdaSetDatePage::drawCalendar()
     for (uint8_t dow = 0; dow < 7; ++dow) {
         GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
         GC.setCursor(107+dow*31,50);
-        GC.print((const __FlashStringHelper *)(GStringDOW + dow*4));
+        GC.print(GDOWString(dow));
     }
 
     // Draw calendar
     
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     
     uint32_t start = AdaGregorianDayCount(1,month,year);
     uint32_t end = AdaGregorianDayCount(1,nmonth,nyear);
@@ -164,12 +136,11 @@ void AdaSetDatePage::drawCalendar()
 
 void AdaSetDatePage::drawContents()
 {
-    GC.setFont(&Narrow25);
     GC.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
-    GC.drawButton(RECT( 10,100,40,37),F("-"),28,KCornerUL | KCornerLL,KCenterAlign);
-    GC.drawButton(RECT( 51,100,40,37),F("+"),28,KCornerUR | KCornerLR,KCenterAlign);
-    GC.drawButton(RECT( 10,175,40,37),F("-"),28,KCornerUL | KCornerLL,KCenterAlign);
-    GC.drawButton(RECT( 51,175,40,37),F("+"),28,KCornerUR | KCornerLR,KCenterAlign);
+    GC.drawButton(RECT( 10,100,40,37),(const __FlashStringHelper *)string_minus,28,KCornerUL | KCornerLL,KCenterAlign);
+    GC.drawButton(RECT( 51,100,40,37),(const __FlashStringHelper *)string_plus,28,KCornerUR | KCornerLR,KCenterAlign);
+    GC.drawButton(RECT( 10,175,40,37),(const __FlashStringHelper *)string_minus,28,KCornerUL | KCornerLL,KCenterAlign);
+    GC.drawButton(RECT( 51,175,40,37),(const __FlashStringHelper *)string_plus,28,KCornerUR | KCornerLR,KCenterAlign);
 
     drawMonth();
     drawYear();   

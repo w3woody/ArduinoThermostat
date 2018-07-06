@@ -13,20 +13,6 @@
 
 /************************************************************************/
 /*                                                                      */
-/*  Constants                                                           */
-/*                                                                      */
-/************************************************************************/
-
-extern const char GStringSpring[];
-extern const char GStringSummer[];
-extern const char GStringFall[];
-extern const char GStringWinter[];
-extern const char GStringSaver[];
-
-extern const char* const GScheduleName[];
-
-/************************************************************************/
-/*                                                                      */
 /*  Structures                                                          */
 /*                                                                      */
 /************************************************************************/
@@ -47,11 +33,6 @@ struct AdaScheduleItem
 struct AdaScheduleDay
 {
     struct AdaScheduleItem setting[4];  // 4 settings per day
-};
-
-struct AdaScheduleRecord
-{
-    struct AdaScheduleDay dow[7];
 };
 
 /************************************************************************/
@@ -77,20 +58,15 @@ class AdaSchedule
          *  Schedule. We have 3: Winter, Summer, Saving
          */
         
-        void            setCurSchedule(uint8_t value)
-                            {
-                                curSchedule = value;
-                                lastTripped = 0xFF;
-                            }
-        uint8_t         getCurSchedule()
-                            {
-                                return curSchedule;
-                            }
-        AdaScheduleRecord schedules[5];
+        void            setCurSchedule(uint8_t value);
+        uint8_t         getCurSchedule();
+                            
+        AdaScheduleDay  getSchedule(uint8_t schedule, uint8_t dow);
+        void            setSchedule(uint8_t schedule, uint8_t dow, const AdaScheduleDay &item);
     
     private:
-        uint8_t         curSchedule;        /* The schedule we're running */
-        uint8_t         lastTripped;        /* The last setting we tripped */
+        uint8_t         lastTrippedDOW;     /* The last setting we tripped */
+        uint8_t         lastTrippedIndex;
         uint32_t        lastCheck;          /* The last time we checked */
 };
 

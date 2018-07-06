@@ -5,28 +5,20 @@
 
 #include "AdaUIScreen.h"
 #include "AdaSchedulePage.h"
-#include "Narrow25.h"
-#include "Narrow75D.h"
+#include "Narrow25D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
 #include "AdaSchedule.h"
 #include "AdaUtils.h"
 #include "AdaSetSchedule.h"
-
-#ifdef __AVR__
-    #include <avr/pgmspace.h>
-#elif defined(ESP8266) || defined(ESP32)
-    #include <pgmspace.h>
-#endif
+#include "AdaProgmem.h"
+#include "AdaStrings.h"
 
 /************************************************************************/
 /*                                                                      */
 /*  Layout Constants                                                    */
 /*                                                                      */
 /************************************************************************/
-
-static const char string_title[] PROGMEM = "SCHEDULE";
-static const char string_back[] PROGMEM = "\177DONE";
 
 static const AdaUIRect AScheduleRects[] PROGMEM = {
     { 100,  89, 140, 38 },      // Temperature range 1
@@ -39,29 +31,13 @@ static const AdaUIRect AScheduleRects[] PROGMEM = {
 };
 
 static const AdaPage ASchedule PROGMEM = {
-    NULL, string_back, GScheduleName, AScheduleRects, 7
+    NULL, string_back, GScheduleNames, AScheduleRects, 7
 };
 
+static bool GPasteFlag;             // True if we have something to paste
 static AdaScheduleDay GPaste;       // Where we store our stuff
 
 static AdaSetSchedulePage GSchedulePage;    // Page to set schedule
-
-/************************************************************************/
-/*                                                                      */
-/*  Support                                                             */
-/*                                                                      */
-/************************************************************************/
-
-/*
- *  Borrow code from Adafruit_GFX library to handle reading from PROGMEM
- *  space if we are missing some definitions
- */
-
-#if !defined(__INT_MAX__) || (__INT_MAX__ > 0xFFFF)
-    #define pgm_read_pointer(addr) ((void *)pgm_read_dword(addr))
-#else
-    #define pgm_read_pointer(addr) ((void *)pgm_read_word(addr))
-#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -76,28 +52,27 @@ static AdaSetSchedulePage GSchedulePage;    // Page to set schedule
 
 AdaSchedulePage::AdaSchedulePage() : AdaUIPage(&ASchedule)
 {
-    for (uint8_t i = 0; i < 4; ++i) {
-        GPaste.setting[i].hour = 0xFF;
-    }
 }
 
 void AdaSchedulePage::viewWillAppear()
 {
     selDOW = 0;
     selSchedule = 0;
+    GPasteFlag = false;
     
     if (GSchedulePage.changed) {
         // Change our schedule item
         GSchedulePage.changed = false;
         
-        AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
-        AdaScheduleDay *day = rec->dow + selDOW;
-        AdaScheduleItem *item = day->setting + selItem;
+        AdaScheduleDay day = GSchedule.getSchedule(selSchedule,selDOW);
+        AdaScheduleItem *item = day.setting + selItem;
 
         item->hour = GSchedulePage.hour;
         item->minute = GSchedulePage.minute;
         item->heat = GSchedulePage.heat;
         item->cool = GSchedulePage.cool;
+        
+        GSchedule.setSchedule(selSchedule,selDOW,day);
     }
 }
 
@@ -123,41 +98,46 @@ void AdaSchedulePage::drawContents()
         else if (dow == 6) corner = KCornerUR | KCornerLR;
         else corner = 0;
         
-        GC.drawButton(RECT(100+dow*31,51,30,37),(const __FlashStringHelper *)(GStringDOW + dow*4),26,corner);
+        GC.drawButton(RECT(100+dow*31,51,30,37),GDOWString(dow),26,corner);
     }
     
     /*
      *  Now draw the four settings for this record
      */
     
-    AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
-    AdaScheduleDay *day = rec->dow + selDOW;
+    AdaScheduleDay day = GSchedule.getSchedule(selSchedule,selDOW);
     
-    GC.setFont(&Narrow25);
+    GC.setFont(&Narrow25D);
     GC.setTextColor(ADAUI_BLUE,ADAUI_DARKGRAY);
 
     for (uint8_t ix = 0; ix < 4; ++ix) {
         AdaUICorner cornerLeft = (ix == 3) ? KCornerLL : 0;
         AdaUICorner cornerRight = (ix == 3) ? KCornerLR : 0;
 
-        if (day->setting[ix].hour == 0xFF) {
+        if (day.setting[ix].hour == 0xFF) {
             GC.drawButton(RECT(100,89+38*ix,31,37),cornerLeft);
             GC.drawButton(RECT(132,89+38*ix,31,37));
             GC.drawButton(RECT(164,89+38*ix,75,37),cornerRight);
         } else {
-            FormatNumber(buffer,day->setting[ix].heat);
+            FormatNumber(buffer,day.setting[ix].heat);
             GC.drawButton(RECT(100,89+38*ix,31,37),buffer,26,cornerLeft);
-            FormatNumber(buffer,day->setting[ix].cool);
+            FormatNumber(buffer,day.setting[ix].cool);
             GC.drawButton(RECT(132,89+38*ix,31,37),buffer,26);
-            FormatTime(buffer,day->setting[ix].hour,day->setting[ix].minute);
+            FormatTime(buffer,day.setting[ix].hour,day.setting[ix].minute);
             GC.drawButton(RECT(164,89+38*ix,75,37),buffer,26,cornerRight);
         }
     }
     
     GC.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
-    GC.drawButton(RECT(250,127,70,37),F("CLEAR"),26,KCornerUL | KCornerUR);
-    GC.drawButton(RECT(250,165,70,37),F("COPY"),26);
-    GC.drawButton(RECT(250,203,70,37),F("PASTE"),26,KCornerLL | KCornerLR);
+    GC.drawButton(RECT(250,127,70,37),(const __FlashStringHelper *)string_clear,26,KCornerUL | KCornerUR);
+    GC.drawButton(RECT(250,165,70,37),(const __FlashStringHelper *)string_copy,26);
+    
+    if (GPasteFlag) {
+        GC.setTextColor(ADAUI_BLACK,ADAUI_BLUE);
+    } else {
+        GC.setTextColor(ADAUI_RED,ADAUI_DARKGRAY);
+    }
+    GC.drawButton(RECT(250,203,70,37),(const __FlashStringHelper *)string_paste,26,KCornerLL | KCornerLR);
 }
 
 /*  AdaSchedulePage::drawTitle
@@ -167,12 +147,8 @@ void AdaSchedulePage::drawContents()
 
 void AdaSchedulePage::drawTitle()
 {
-    const __FlashStringHelper *str;
-    str = (const __FlashStringHelper *)pgm_read_pointer(GScheduleName+selSchedule);
-    
-    GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
-    GC.setFont(&Narrow25);
-    GC.drawButton(RECT(160,0,160,32),str,24);
+    // Our color, font was set in the caller
+    GC.drawButton(RECT(160,0,160,32),GScheduleString(selSchedule),24);
 }
 
 /*  AdaSchedulePage::handleTap
@@ -209,6 +185,9 @@ void AdaSchedulePage::handleEvent(uint8_t ix)
         case AEVENT_LEFTBUTTON5:
             selSchedule = ix;
             invalidateContents();
+
+            GC.setTextColor(ADAUI_RED,ADAUI_BLACK);
+            GC.setFont(&Narrow25D);
             drawTitle();
             break;
             
@@ -218,9 +197,8 @@ void AdaSchedulePage::handleEvent(uint8_t ix)
         case AEVENT_FIRSTSPOT+3:
             {
                 selItem = ix - AEVENT_FIRSTSPOT;
-                AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
-                AdaScheduleDay *day = rec->dow + selDOW;
-                AdaScheduleItem *item = day->setting + selItem;
+                AdaScheduleDay day = GSchedule.getSchedule(selSchedule,selDOW);
+                AdaScheduleItem *item = day.setting + selItem;
                 
                 GSchedulePage.hour = item->hour;
                 GSchedulePage.minute = item->minute;
@@ -233,25 +211,27 @@ void AdaSchedulePage::handleEvent(uint8_t ix)
             
         case AEVENT_FIRSTSPOT+4:        // Clear
             {
-                AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
-                AdaScheduleDay *day = rec->dow + selDOW;
+                AdaScheduleDay day = GSchedule.getSchedule(selSchedule,selDOW);
                 for (uint8_t i = 0; i < 4; ++i) {
-                    day->setting[i].hour = 0xFF;
+                    day.setting[i].hour = 0xFF;
                 }
+                GSchedule.setSchedule(selSchedule,selDOW,day);
                 invalidateContents();
                 break;
             }
         case AEVENT_FIRSTSPOT+5:        // Copy
             {
-                AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
-                GPaste = rec->dow[selDOW];
+                GPasteFlag = true;
+                GPaste = GSchedule.getSchedule(selSchedule,selDOW);
+                invalidateContents();
                 break;
             }
         case AEVENT_FIRSTSPOT+6:        // Paste
             {
-                AdaScheduleRecord *rec = GSchedule.schedules + selSchedule;
-                rec->dow[selDOW] = GPaste;
-                invalidateContents();
+                if (GPasteFlag) {
+                    GSchedule.setSchedule(selSchedule,selDOW,GPaste);
+                    invalidateContents();
+                }
                 break;
             }
     }
