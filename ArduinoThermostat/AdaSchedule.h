@@ -86,7 +86,13 @@ class AdaSchedule
         void            periodicUpdate();
         
         /*
-         *  Schedule. We have 3: Winter, Summer, Saving
+         *  Schedule. We have 5:
+         *
+         *      0: Spring
+         *      1: Summer
+         *      2: Fall
+         *      3: Winter
+         *      4: Energy Saver
          */
         
         void            setCurSchedule(uint8_t value);

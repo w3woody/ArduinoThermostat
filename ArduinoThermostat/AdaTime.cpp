@@ -75,7 +75,7 @@ ISR(TIMER2_COMPA_vect)
 
 /*  AdaTimeInitialize
  *
- *      Iniitalize TIMER2 for a 125hz output. (Assumption: 16mhz processor)
+ *      Initalize TIMER2 for a 125hz output. (Assumption: 16mhz processor)
  */
 
 void AdaTimeInitialize()
