@@ -40,14 +40,10 @@
 #include "Narrow75D.h"
 #include "AdaTime.h"
 #include "AdaThermostat.h"
-#include "AdaSettingsPage.h"
 #include "AdaUtils.h"
 #include "AdaSchedule.h"
 #include "AdaProgmem.h"
 #include "AdaStrings.h"
-
-#include "AdaTempPage.h"
-#include "AdaSchedulePickerPage.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -67,16 +63,6 @@ static const char* const AHomeTitles[] PROGMEM = {
 static const AdaPage AHome PROGMEM = {
     NULL, NULL, AHomeTitles, AHomeRects, 2
 };
-
-/************************************************************************/
-/*                                                                      */
-/*  Page Globals                                                        */
-/*                                                                      */
-/************************************************************************/
-
-static AdaTempPage GTempPage;
-static AdaSchedulePickerPage GSchedulePage;
-static AdaSettingsPage GSettingsPage;
 
 /************************************************************************/
 /*                                                                      */
@@ -444,13 +430,13 @@ void AdaHomePage::handleEvent(uint8_t ix)
         case AEVENT_LEFTBUTTON1:
         case AEVENT_FIRSTSPOT:
         case AEVENT_FIRSTSPOT+1:
-            pushPage(&GTempPage);
+            /* Show the temperature page */
             break;
         case AEVENT_LEFTBUTTON2:
-            pushPage(&GSchedulePage);
+            /* Show the schedule page */
             break;
         case AEVENT_LEFTBUTTON5:
-            pushPage(&GSettingsPage);
+            /* Show the settings page */
             break;
     }
 }

@@ -85,10 +85,6 @@ class AdaSchedule
 
         void            periodicUpdate();
         
-        /*
-         *  Schedule. We have 3: Winter, Summer, Saving
-         */
-        
         void            setCurSchedule(uint8_t value);
         uint8_t         getCurSchedule();
                             
